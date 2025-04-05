@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "746335666026",
+    "project_id": "tayotaxi-bc7b6",
+    "storage_bucket": "tayotaxi-bc7b6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:746335666026:android:e2f6cfa93752cc3dccef13",
+        "android_client_info": {
+          "package_name": "com.example.app_tayo_taxi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoA7jcNk9RovOJGjWDh9CQbh-YFNALdm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:746335666026:android:d88f53b1c178b62dccef13",
+        "android_client_info": {
+          "package_name": "com.example.tayo_taxi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoA7jcNk9RovOJGjWDh9CQbh-YFNALdm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
