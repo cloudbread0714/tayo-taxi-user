@@ -1,7 +1,8 @@
-// login_page.dart
+// 수정된 _login 함수: 로그인 성공 후 LocationPage로 이동하도록 수정
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart';
+import 'location_page.dart'; // 위치 추적 페이지 import
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,12 +24,11 @@ class _LoginPageState extends State<LoginPage> {
         email: email,
         password: password,
       );
-      showDialog(
-        context: context,
-        builder: (_) => const AlertDialog(
-          title: Text('로그인 성공'),
-          content: Text('환영합니다!'),
-        ),
+
+      // 로그인 성공 시 LocationPage로 이동
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LocationPage()),
       );
     } on FirebaseAuthException catch (e) {
       showDialog(
