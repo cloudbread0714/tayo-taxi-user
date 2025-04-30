@@ -1,4 +1,3 @@
-// 수정된 _login 함수: 로그인 성공 후 LocationPage로 이동하도록 수정
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart';
@@ -14,6 +13,25 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // 앱 시작 시 자동 로그인 확인
+  }
+
+  void _checkLoginStatus() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // 이미 로그인 상태라면 바로 LocationPage로 이동
+      Future.microtask(() {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LocationPage()),
+        );
+      });
+    }
+  }
 
   void _login() async {
     final email = emailController.text.trim();

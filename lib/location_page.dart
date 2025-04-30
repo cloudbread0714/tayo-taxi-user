@@ -6,7 +6,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as latlng;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'pickup_location_page.dart'; // Make sure this file uses latlng.LatLng and flutter_map if you're replacing google_maps_flutter
+
+import 'pickup_location_page.dart';
+import 'mypage.dart'; // 마이페이지 import
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
 
@@ -99,10 +101,7 @@ class _LocationPageState extends State<LocationPage> {
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$kGoogleApiKey';
     try {
-      debugPrint('🔍 Geocoding address: $address');
       final response = await http.get(Uri.parse(url));
-      debugPrint('📦 Geocoding 응답 본문: ${response.body}');
-      debugPrint('Geocode status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final results = data['results'] as List;
@@ -112,17 +111,11 @@ class _LocationPageState extends State<LocationPage> {
             destinationLatLng = latlng.LatLng(location['lat'], location['lng']);
           });
         } else {
-          debugPrint('❌ Geocoding 결과 없음, destinationLatLng를 null로 초기화');
-          setState(() {
-            destinationLatLng = null;
-          });
+          setState(() => destinationLatLng = null);
         }
       }
     } catch (e) {
-      debugPrint('Geocode error: $e');
-      setState(() {
-        destinationLatLng = null;
-      });
+      setState(() => destinationLatLng = null);
     }
   }
 
@@ -213,7 +206,9 @@ class _LocationPageState extends State<LocationPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          // TODO: 즐겨찾기 기능 연결
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.black,
@@ -222,10 +217,16 @@ class _LocationPageState extends State<LocationPage> {
                         child: const Text('즐겨찾기'),
                       ),
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MyPage()),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade200,
+                          backgroundColor: Colors.white,
                           foregroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.grey),
                         ),
                         child: const Text('마이페이지'),
                       ),
