@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as latlng;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -189,7 +188,6 @@ class _LocationPageState extends State<LocationPage> {
                           builder: (_) => PickupLocationPage(
                             suggestedPlaceName: destinationController.text,
                             currentLocation: currentLatLng!,
-                            pickupLocation: destinationLatLng!,
                           ),
                         ),
                       );
