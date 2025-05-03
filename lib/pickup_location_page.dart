@@ -1,18 +1,23 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:latlong2/latlong.dart' show LatLng;
+import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'ride_request.dart';
 
 class PickupLocationPage extends StatefulWidget {
   final String suggestedPlaceName;
   final LatLng currentLocation;
+  final LatLng destinationLocation;
 
   const PickupLocationPage({
     super.key,
     required this.suggestedPlaceName,
     required this.currentLocation,
+    required this.destinationLocation,
   });
 
   @override
@@ -37,18 +42,14 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
 
     final url = Uri.parse(
       'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-          '?location=$lat,$lng'
-          '&radius=500'
-          '&type=convenience_store'
-          '&language=ko'
-          '&key=$googleApiKey',
+          '?location=$lat,$lng&radius=500&type=convenience_store&language=ko&key=$googleApiKey',
     );
 
     try {
       final response = await http.get(url);
       final data = jsonDecode(response.body);
-
       final results = data['results'] as List;
+
       if (results.isNotEmpty) {
         final store = results[0];
         final name = store['name'];
@@ -76,17 +77,29 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
 
   void _addPickupMarkerIfAvailable() {
     if (_controller != null && pickupNLatLng != null) {
-      _controller!.addOverlay(
-        NMarker(id: 'pickup', position: pickupNLatLng!),
+      _controller!.addOverlay(NMarker(id: 'pickup', position: pickupNLatLng!));
+      _controller!.updateCamera(
+        NCameraUpdate.withParams(target: pickupNLatLng!, zoom: 18),
       );
-
-      // 카메라 위치 이동 (애니메이션 없이)
-      final cameraUpdate = NCameraUpdate.withParams(
-        target: pickupNLatLng!,
-        zoom: 18,
-      );
-      _controller!.updateCamera(cameraUpdate);
     }
+  }
+
+  Future<void> _submitRideRequest() async {
+    if (pickupNLatLng == null) return;
+
+    final ride = RideRequest(
+      passengerId: 'user_123',
+      pickupPlaceName: pickupPlaceName,
+      pickupLocation: LatLng(pickupNLatLng!.latitude, pickupNLatLng!.longitude),
+      destinationName: widget.suggestedPlaceName,
+      destinationLocation: widget.destinationLocation,
+    );
+
+    await FirebaseFirestore.instance.collection('ride_requests').add(ride.toMap());
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('택시 호출이 완료되었습니다.')),
+    );
   }
 
   @override
@@ -119,26 +132,17 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
                 ),
                 onMapReady: (controller) async {
                   _controller = controller;
-
-                  await controller.addOverlay(
-                    NMarker(id: 'current', position: currentNLatLng),
-                  );
-
+                  await controller.addOverlay(NMarker(id: 'current', position: currentNLatLng));
                   _addPickupMarkerIfAvailable();
                 },
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("택시 호출 기능은 준비 중입니다.")),
-                );
-              },
+              onPressed: _submitRideRequest,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Colors.black,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               ),
               child: const Text("택시 호출하기"),
             ),

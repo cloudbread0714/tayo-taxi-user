@@ -1,4 +1,3 @@
-// models/ride_request.dart
 import 'package:latlong2/latlong.dart';
 
 class RideRequest {
@@ -7,6 +6,7 @@ class RideRequest {
   final LatLng pickupLocation;
   final String destinationName;
   final LatLng destinationLocation;
+  final String status;
 
   RideRequest({
     required this.passengerId,
@@ -14,6 +14,7 @@ class RideRequest {
     required this.pickupLocation,
     required this.destinationName,
     required this.destinationLocation,
+    this.status = 'pending',
   });
 
   Map<String, dynamic> toMap() {
@@ -25,16 +26,24 @@ class RideRequest {
       'destinationName': destinationName,
       'destinationLat': destinationLocation.latitude,
       'destinationLng': destinationLocation.longitude,
+      'status': status,
     };
   }
 
   factory RideRequest.fromMap(Map<String, dynamic> map) {
     return RideRequest(
-      passengerId: map['passengerId'],
-      pickupPlaceName: map['pickupPlaceName'],
-      pickupLocation: LatLng(map['pickupLat'], map['pickupLng']),
-      destinationName: map['destinationName'],
-      destinationLocation: LatLng(map['destinationLat'], map['destinationLng']),
+      passengerId: map['passengerId'] ?? '',
+      pickupPlaceName: map['pickupPlaceName'] ?? '',
+      pickupLocation: LatLng(
+        (map['pickupLat'] ?? 0).toDouble(),
+        (map['pickupLng'] ?? 0).toDouble(),
+      ),
+      destinationName: map['destinationName'] ?? '',
+      destinationLocation: LatLng(
+        (map['destinationLat'] ?? 0).toDouble(),
+        (map['destinationLng'] ?? 0).toDouble(),
+      ),
+      status: map['status'] ?? 'pending',
     );
   }
 }
