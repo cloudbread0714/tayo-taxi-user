@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'pickup_location_page.dart';
-import 'mypage.dart'; // 마이페이지 import
+import 'mypage.dart';
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
 
@@ -188,6 +188,7 @@ class _LocationPageState extends State<LocationPage> {
                           builder: (_) => PickupLocationPage(
                             suggestedPlaceName: destinationController.text,
                             currentLocation: currentLatLng!,
+                            destinationLocation: destinationLatLng!, // ✅ 수정된 부분
                           ),
                         ),
                       );
