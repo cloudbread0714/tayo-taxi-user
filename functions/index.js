@@ -1,10 +1,9 @@
-const functions = require("firebase-functions"); // ✅ v1 안정 버전
+const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
-// 예시 Cloud Function
 exports.copyRecentRideRequests = functions.pubsub
-  .schedule("every 5 minutes")
+  .schedule("every 1 minutes")
   .onRun(async (context) => {
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
@@ -18,11 +17,17 @@ exports.copyRecentRideRequests = functions.pubsub
       .get();
 
     const batch = db.batch();
+
     snapshot.forEach((doc) => {
       const ref = db.collection("recent_ride_requests").doc(doc.id);
-      batch.set(ref, doc.data());
+      batch.set(ref, {
+        ...doc.data(),
+        expiresAt: admin.firestore.Timestamp.fromMillis(
+          now.toMillis() + 10 * 60 * 1000
+        ),
+      });
     });
 
     await batch.commit();
-    console.log(`✔ Copied ${snapshot.size} recent requests`);
+    console.log(`✔ Copied ${snapshot.size} recent ride requests`);
   });
