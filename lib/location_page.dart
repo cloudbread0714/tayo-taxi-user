@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'pickup_location_page.dart';
 import 'mypage.dart';
+import 'bookmarkPlaces.dart';
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
 
@@ -136,7 +137,7 @@ class _LocationPageState extends State<LocationPage> {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
-                  const Icon(Icons.local_taxi, size: 80, color: Colors.amber),
+                  const Icon(Icons.local_taxi, size: 80, color: Colors.green),
                   const SizedBox(height: 30),
                   TextField(
                     readOnly: true,
@@ -194,7 +195,7 @@ class _LocationPageState extends State<LocationPage> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
+                      backgroundColor: Colors.green.shade200,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -205,8 +206,22 @@ class _LocationPageState extends State<LocationPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton(
-                        onPressed: () {
-                          // TODO: 즐겨찾기 기능 연결
+                        onPressed: () async {
+                          // 즐겨찾기 페이지로 이동 → 돌아올 때 선택된 장소 정보 받기
+                          final result = await Navigator.push<Map<String, dynamic>>(
+                            context,
+                            MaterialPageRoute(builder: (_) => const BookmarkPlacesPage()),
+                          );
+                          if (result != null) {
+                            // 바로 목적지 입력란에 반영
+                            setState(() {
+                              destinationController.text = result['placeName'];
+                              destinationLatLng = latlng.LatLng(
+                                result['lat'],
+                                result['lng'],
+                              );
+                            });
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
@@ -216,11 +231,21 @@ class _LocationPageState extends State<LocationPage> {
                         child: const Text('즐겨찾기'),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const MyPage()),
                           );
+                          if (result != null) {
+
+                            final desc = result['description'] as String;
+                            final coords = result['latlng'] as latlng.LatLng;
+                            setState(() {
+                              destinationController.text = desc;
+                              destinationLatLng = coords;
+                              suggestions.clear();
+                            });
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
