@@ -140,7 +140,7 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
             ElevatedButton(
               onPressed: _submitRideRequest,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
+                backgroundColor: Colors.green,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               ),

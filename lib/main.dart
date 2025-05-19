@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
       title: 'TayoTaxi',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.amber,
+        primarySwatch: Colors.green,
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Arial',
       ),

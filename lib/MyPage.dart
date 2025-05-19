@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'location_page.dart';
 import 'login_page.dart';
+import 'MyInfo.dart';
+import 'familyInfo.dart';
+import 'MyOrderHistory.dart';
 
 class MyPage extends StatelessWidget {
   const MyPage({super.key});
@@ -30,15 +33,24 @@ class MyPage extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             _menuButton(context, Icons.person, '나의 정보', () {
-              // TODO: 나의 정보 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyInfoPage()),
+              );
             }),
             const SizedBox(height: 20),
             _menuButton(context, Icons.family_restroom, '보호자 정보', () {
-              // TODO: 보호자 정보 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FamilyInfoPage()),
+              );
             }),
             const SizedBox(height: 20),
             _menuButton(context, Icons.history, '최근 내역', () {
-              // TODO: 최근 내역 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyOrderHistory()),
+              );
             }),
             const Spacer(), // 아래 공간 확보
             ElevatedButton.icon(
@@ -53,7 +65,7 @@ class MyPage extends StatelessWidget {
               icon: const Icon(Icons.logout),
               label: const Text('로그아웃', style: TextStyle(fontSize: 16)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Colors.redAccent.shade100,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
@@ -81,7 +93,7 @@ class MyPage extends StatelessWidget {
         icon: Icon(icon),
         label: Text(label, style: const TextStyle(fontSize: 18)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.amber.shade100,
+          backgroundColor: Colors.green.shade200,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
