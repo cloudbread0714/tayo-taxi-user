@@ -5,19 +5,25 @@ import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'ride_request.dart';
+import 'passenger_waiting_page.dart';
 
 class PickupLocationPage extends StatefulWidget {
   final String suggestedPlaceName;
   final LatLng currentLocation;
   final LatLng destinationLocation;
+  final LatLng? pickupLatLng;
+  final String? pickupName;
 
   const PickupLocationPage({
     super.key,
     required this.suggestedPlaceName,
     required this.currentLocation,
     required this.destinationLocation,
+    this.pickupLatLng,
+    this.pickupName,
   });
 
   @override
@@ -28,11 +34,20 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
   NaverMapController? _controller;
   NLatLng? pickupNLatLng;
   String pickupPlaceName = '';
+  String? rideRequestDocId;
 
   @override
   void initState() {
     super.initState();
-    _findNearbyConvenienceStore();
+
+    if (widget.pickupLatLng != null && widget.pickupName != null) {
+      pickupNLatLng = NLatLng(
+          widget.pickupLatLng!.latitude, widget.pickupLatLng!.longitude);
+      pickupPlaceName = widget.pickupName!;
+      _addMarkersAndAdjustCamera();
+    } else {
+      _findNearbyConvenienceStore();
+    }
   }
 
   Future<void> _findNearbyConvenienceStore() async {
@@ -62,7 +77,7 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
           pickupNLatLng = NLatLng(storeLat, storeLng);
         });
 
-        _addPickupMarkerIfAvailable();
+        _addMarkersAndAdjustCamera();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("근처 편의점을 찾을 수 없습니다.")),
@@ -75,27 +90,50 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
     }
   }
 
-  void _addPickupMarkerIfAvailable() {
-    if (_controller != null && pickupNLatLng != null) {
-      _controller!.addOverlay(NMarker(id: 'pickup', position: pickupNLatLng!));
-      _controller!.updateCamera(
-        NCameraUpdate.withParams(target: pickupNLatLng!, zoom: 18),
-      );
-    }
+  Future<void> _addMarkersAndAdjustCamera() async {
+    if (_controller == null || pickupNLatLng == null) return;
+
+    await _controller!.clearOverlays();
+
+    await _controller!.addOverlay(NMarker(
+      id: 'pickup',
+      position: pickupNLatLng!,
+    ));
+
+    await _controller!.updateCamera(
+      NCameraUpdate.withParams(target: pickupNLatLng!, zoom: 18),
+    );
   }
 
   Future<void> _submitRideRequest() async {
     if (pickupNLatLng == null) return;
 
+    final user = FirebaseAuth.instance.currentUser;
+    final passengerId = user?.email ?? 'unknown';
+
     final ride = RideRequest(
-      passengerId: 'user_123',
+      passengerId: passengerId,
       pickupPlaceName: pickupPlaceName,
-      pickupLocation: LatLng(pickupNLatLng!.latitude, pickupNLatLng!.longitude),
+      pickupLat: pickupNLatLng!.latitude,
+      pickupLng: pickupNLatLng!.longitude,
       destinationName: widget.suggestedPlaceName,
-      destinationLocation: widget.destinationLocation,
+      destinationLat: widget.destinationLocation.latitude,
+      destinationLng: widget.destinationLocation.longitude,
     );
 
-    await FirebaseFirestore.instance.collection('ride_requests').add(ride.toMap());
+    final docRef = await FirebaseFirestore.instance
+        .collection('ride_requests')
+        .add(ride.toMap());
+
+    rideRequestDocId = docRef.id;
+
+    // 수락을 기다리지 않고 바로 페이지 전환
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PassengerWaitingPage(requestId: rideRequestDocId!),
+      ),
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('택시 호출이 완료되었습니다.')),
@@ -114,14 +152,31 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             Text(
               pickupPlaceName.isNotEmpty
                   ? '픽업 위치: $pickupPlaceName'
-                  : '편의점 정보를 불러오는 중...',
-              style: const TextStyle(fontSize: 16),
+                  : '픽업 정보를 불러오는 중...',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: ElevatedButton(
+                  onPressed: _submitRideRequest,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.black,
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                  child: const Text("택시 호출하기"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             Expanded(
               child: NaverMap(
                 options: NaverMapViewOptions(
@@ -132,21 +187,10 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
                 ),
                 onMapReady: (controller) async {
                   _controller = controller;
-                  await controller.addOverlay(NMarker(id: 'current', position: currentNLatLng));
-                  _addPickupMarkerIfAvailable();
+                  await _addMarkersAndAdjustCamera();
                 },
               ),
             ),
-            ElevatedButton(
-              onPressed: _submitRideRequest,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-              ),
-              child: const Text("택시 호출하기"),
-            ),
-            const SizedBox(height: 12),
           ],
         ),
       ),
