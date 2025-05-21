@@ -6,7 +6,7 @@ import 'package:latlong2/latlong.dart' as latlng;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'pickup_location_page.dart';
+import 'package:app_tayo_taxi/PickUpList_page.dart';
 import 'mypage.dart';
 import 'bookmarkPlaces.dart';
 
@@ -171,8 +171,7 @@ class _LocationPageState extends State<LocationPage> {
                     onPressed: () async {
                       if (currentLatLng == null) return;
 
-                      if (destinationLatLng == null &&
-                          destinationController.text.isNotEmpty) {
+                      if (destinationLatLng == null && destinationController.text.isNotEmpty) {
                         await _convertAddressToLatLng(destinationController.text);
                       }
 
@@ -186,10 +185,10 @@ class _LocationPageState extends State<LocationPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PickupLocationPage(
-                            suggestedPlaceName: destinationController.text,
+                          builder: (_) => PickupListPage(
                             currentLocation: currentLatLng!,
-                            destinationLocation: destinationLatLng!, // ✅ 수정된 부분
+                            destinationLocation: destinationLatLng!,
+                            suggestedPlaceName: destinationController.text,
                           ),
                         ),
                       );
@@ -207,13 +206,11 @@ class _LocationPageState extends State<LocationPage> {
                     children: [
                       ElevatedButton(
                         onPressed: () async {
-                          // 즐겨찾기 페이지로 이동 → 돌아올 때 선택된 장소 정보 받기
                           final result = await Navigator.push<Map<String, dynamic>>(
                             context,
                             MaterialPageRoute(builder: (_) => const BookmarkPlacesPage()),
                           );
                           if (result != null) {
-                            // 바로 목적지 입력란에 반영
                             setState(() {
                               destinationController.text = result['placeName'];
                               destinationLatLng = latlng.LatLng(
@@ -237,7 +234,6 @@ class _LocationPageState extends State<LocationPage> {
                             MaterialPageRoute(builder: (_) => const MyPage()),
                           );
                           if (result != null) {
-
                             final desc = result['description'] as String;
                             final coords = result['latlng'] as latlng.LatLng;
                             setState(() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login_page.dart'; // 로그인 페이지 import 추가
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -45,11 +46,13 @@ class _SignUpPageState extends State<SignUpPage> {
             .set({
           'name': name,
           'phone': phone,
+          'email': id,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
 
-      // 성공 다이얼로그
+      // 성공 다이얼로그 및 로그인 페이지로 이동
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -58,8 +61,11 @@ class _SignUpPageState extends State<SignUpPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                );
               },
               child: const Text('확인'),
             ),
