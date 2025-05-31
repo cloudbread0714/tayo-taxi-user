@@ -10,19 +10,13 @@ class FamilyInfoPage extends StatefulWidget {
 }
 
 class _FamilyInfoPageState extends State<FamilyInfoPage> {
-  // 편집 모드 토글용
-  bool _editingRelation = false;
-  bool _editingName     = false;
-  bool _editingPhone    = false;
+  bool _editingName  = false;
+  bool _editingPhone = false;
 
-  // 컨트롤러
-  final _relationCtrl = TextEditingController();
-  final _nameCtrl     = TextEditingController();
-  final _phoneCtrl    = TextEditingController();
+  final _nameCtrl  = TextEditingController();
+  final _phoneCtrl = TextEditingController();
 
-  // 초기 값 저장용
-  String _relation = '';
-  String _familyName = '';
+  String _familyName  = '';
   String _familyPhone = '';
 
   @override
@@ -35,24 +29,37 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
         .get()
         .then((doc) {
       final data = doc.data() ?? {};
-      final fam = data['family'] as Map<String, dynamic>? ?? {};
+      final fam = data['guardian'] as Map<String, dynamic>? ?? {};
       setState(() {
-        _relation     = fam['relation'] ?? '';
-        _familyName   = fam['name']     ?? '';
-        _familyPhone  = fam['phone']    ?? '';
-        _relationCtrl.text = _relation;
-        _nameCtrl.text     = _familyName;
-        _phoneCtrl.text    = _familyPhone;
+        _familyName  = fam['name']  ?? '';
+        _familyPhone = fam['phone'] ?? '';
+        _nameCtrl.text  = _familyName;
+        _phoneCtrl.text = _familyPhone;
       });
     });
   }
 
   @override
   void dispose() {
-    _relationCtrl.dispose();
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _updateGuardianField(String uid, String key, String value) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update({'guardian.$key': value});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$key 정보가 업데이트되었습니다.')),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('업데이트에 실패했습니다.')),
+      );
+    }
   }
 
   @override
@@ -75,26 +82,8 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 관계
-            _buildLabel('관계'),
-            const SizedBox(height: 8),
-            _buildFieldWithButton(
-              isEditing: _editingRelation,
-              controller: _relationCtrl,
-              readValue: _relation,
-              onToggle: () async {
-                if (_editingRelation) {
-                  final newVal = _relationCtrl.text.trim();
-                  await _updateFamilyField(uid, 'relation', newVal);
-                  setState(() => _relation = newVal);
-                }
-                setState(() => _editingRelation = !_editingRelation);
-              },
-            ),
-
-            const SizedBox(height: 24),
             // 이름
-            _buildLabel('이름'),
+            _buildLabel('보호자 이름'),
             const SizedBox(height: 8),
             _buildFieldWithButton(
               isEditing: _editingName,
@@ -103,7 +92,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
               onToggle: () async {
                 if (_editingName) {
                   final newVal = _nameCtrl.text.trim();
-                  await _updateFamilyField(uid, 'name', newVal);
+                  await _updateGuardianField(uid, 'name', newVal);
                   setState(() => _familyName = newVal);
                 }
                 setState(() => _editingName = !_editingName);
@@ -112,7 +101,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
 
             const SizedBox(height: 24),
             // 전화번호
-            _buildLabel('전화번호'),
+            _buildLabel('보호자 전화번호'),
             const SizedBox(height: 8),
             _buildFieldWithButton(
               isEditing: _editingPhone,
@@ -122,7 +111,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
               onToggle: () async {
                 if (_editingPhone) {
                   final newVal = _phoneCtrl.text.trim();
-                  await _updateFamilyField(uid, 'phone', newVal);
+                  await _updateGuardianField(uid, 'phone', newVal);
                   setState(() => _familyPhone = newVal);
                 }
                 setState(() => _editingPhone = !_editingPhone);
@@ -135,8 +124,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
   }
 
   Widget _buildLabel(String text) {
-    return Text(
-      text,
+    return Text(text,
       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
     );
   }
@@ -202,21 +190,5 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _updateFamilyField(String uid, String key, String value) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .update({'family.$key': value});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('[$key] 정보가 업데이트되었습니다.')),
-      );
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('업데이트에 실패했습니다.')),
-      );
-    }
   }
 }

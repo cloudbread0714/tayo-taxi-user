@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 85),
               Center(
                 child: Icon(
                   Icons.local_taxi,
@@ -103,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: '아이디',
                   labelStyle: const TextStyle(fontSize: 18),
                   contentPadding: const EdgeInsets.symmetric(
-                      vertical: 20.0, horizontal: 16.0),
+                      vertical: 22.0, horizontal: 16.0),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: '비밀번호',
                   labelStyle: const TextStyle(fontSize: 18),
                   contentPadding: const EdgeInsets.symmetric(
-                      vertical: 20.0, horizontal: 16.0),
+                      vertical: 22.0, horizontal: 16.0),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18.0),
+                  padding: const EdgeInsets.symmetric(vertical: 15.0),
                   backgroundColor: Colors.green.shade200,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
@@ -144,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: _goToSignUp,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18.0),
+                  padding: const EdgeInsets.symmetric(vertical: 15.0),
                   backgroundColor: Colors.green.shade200,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
