@@ -13,7 +13,7 @@ class MyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('마이페이지'),
+        title: const Text('마이페이지', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -93,7 +93,7 @@ class MyPage extends StatelessWidget {
         icon: Icon(icon),
         label: Text(label, style: const TextStyle(fontSize: 18)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green.shade200,
+          backgroundColor: Colors.green.shade100,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
