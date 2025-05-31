@@ -1,4 +1,3 @@
-// bookmark_places_page.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,6 +17,8 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
   List<Map<String, dynamic>> suggestions = [];
   late final CollectionReference _bookmarksRef;
   final String _apiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  bool _isHomeMode = false;
+  Map<String, dynamic>? _home;
 
   @override
   void initState() {
@@ -27,9 +28,24 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
         .collection('users')
         .doc(uid)
         .collection('bookmarks');
+    _loadHome();
     _searchController.addListener(() {
       _onSearchChanged(_searchController.text);
     });
+  }
+
+  Future<void> _loadHome() async {
+    final snap = await _bookmarksRef.where('isHome', isEqualTo: true).limit(1).get();
+    if (snap.docs.isNotEmpty) {
+      final data = snap.docs.first.data() as Map<String, dynamic>;
+      setState(() {
+        _home = {
+          'docId': snap.docs.first.id,
+          'placeName': data['placeName'],
+          'address': data['address'],
+        };
+      });
+    }
   }
 
   Future<void> _onSearchChanged(String input) async {
@@ -80,87 +96,159 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
     return LatLng(lat: loc['lat'], lng: loc['lng']);
   }
 
-  Future<void> _addBookmark(Map<String, dynamic> suggestion) async {
+  Future<void> _addBookmark(Map<String, dynamic> suggestion, {bool isHome = false}) async {
     final placeId = suggestion['placeId'] as String;
     final latLng = await _getLatLng(placeId);
+    if (isHome) {
+      // 기존 home 삭제
+      final existing = await _bookmarksRef.where('isHome', isEqualTo: true).get();
+      for (var doc in existing.docs) {
+        await _bookmarksRef.doc(doc.id).delete();
+      }
+    }
     await _bookmarksRef.add({
       'placeId': placeId,
       'placeName': suggestion['placeName'],
       'address': suggestion['address'],
       'lat': latLng.lat,
       'lng': latLng.lng,
+      'isHome': isHome,
       'createdAt': FieldValue.serverTimestamp(),
     });
     _searchController.clear();
-    setState(() => suggestions = []);
+    setState(() {
+      suggestions = [];
+      _isHomeMode = false;
+    });
+    if (isHome) _loadHome();
   }
 
-  Future<void> _deleteBookmark(String docId) =>
-      _bookmarksRef.doc(docId).delete();
+  Future<void> _deleteBookmark(String docId) async =>
+      await _bookmarksRef.doc(docId).delete();
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('즐겨찾기'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 1,
-        ),
+      appBar: AppBar(
+        title: const Text('즐겨찾기', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 1) 검색창
+            // Home 설정 영역
+            if (_home != null) ...[
+              ListTile(
+                leading: const Icon(Icons.home, color: Colors.green),
+                title: Text(_home!['placeName'],
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                subtitle: Text(_home!['address'],
+                    style: const TextStyle(fontSize: 14)),
+                trailing: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isHomeMode = true;
+                      suggestions = [];
+                    });
+                  },
+                  child: const Text('수정'),
+                ),
+              ),
+            ] else ...[
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isHomeMode = true;
+                    suggestions = [];
+                  });
+                },
+                icon: const Icon(Icons.home),
+                label: const Text('집 주소 설정'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade100,
+                  foregroundColor: Colors.black,
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            // 검색창
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.green),
-                hintText: '장소 검색',
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: _isHomeMode ? Colors.green : Colors.green,
+                ),
+                hintText: _isHomeMode ? '집 주소 검색' : '장소 검색',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
             const SizedBox(height: 8),
-
-            // 2) 남은 영역을 통째로 차지하게 한 뒤, 그 위에 자동완성 리스트를 오버레이로 띄웁니다.
             Expanded(
               child: Stack(
                 children: [
-                  // 2-1) 아래에 깔려 있는 즐겨찾기 목록 (스트림)
+                  // 즐겨찾기 목록 (home 제외)
                   StreamBuilder<QuerySnapshot>(
                     stream: _bookmarksRef
                         .orderBy('createdAt', descending: true)
                         .snapshots(),
                     builder: (context, snap) {
-                      if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                      if (!snap.hasData) {
+                        return const Center(
+                            child: CircularProgressIndicator());
+                      }
                       final docs = snap.data!.docs;
-                      if (docs.isEmpty) {
-                        return const Center(child: Text('등록된 즐겨찾기가 없습니다.'));
+                      final list = docs.where((doc) {
+                        final d = doc.data()! as Map<String, dynamic>;
+                        return d['isHome'] != true;
+                      }).toList();
+                      if (list.isEmpty) {
+                        return const Center(
+                            child: Text('등록된 즐겨찾기가 없습니다.'));
                       }
                       return ListView(
                         padding: const EdgeInsets.only(top: 0),
-                        children: docs.map((doc) {
+                        children: list.map((doc) {
                           final data = doc.data()! as Map<String, dynamic>;
                           return Card(
-                            color: Colors.green.shade200,
+                            color: Colors.green.shade100,
                             margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              title: Text(data['placeName'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              subtitle: Text(data['address'], style: const TextStyle(fontSize: 14)),
-                              onTap: () {
-                                Navigator.pop(context, {
-                                  'placeName': data['placeName'],
-                                  'address': data['address'],
-                                  'lat': data['lat'],
-                                  'lng': data['lng'],
-                                });
-                              },
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.black),
-                                onPressed: () => _deleteBookmark(doc.id),
+                            child: SizedBox(
+                              height: 90,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                title: Text(
+                                  data['placeName'],
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  data['address'],
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context, {
+                                    'placeName': data['placeName'],
+                                    'address': data['address'],
+                                    'lat': data['lat'],
+                                    'lng': data['lng'],
+                                  });
+                                },
+                                trailing: Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.black),
+                                    onPressed: () => _deleteBookmark(doc.id),
+                                  ),
+                                ),
                               ),
                             ),
                           );
@@ -168,20 +256,17 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                       );
                     },
                   ),
-
-                  // 2-2) 자동완성 리스트가 있을 때만 보여줌
                   if (suggestions.isNotEmpty)
                     Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
                       child: Container(
-                        // 원하는 높이로 고정
-                        constraints: BoxConstraints(maxHeight: 200),
+                        constraints: const BoxConstraints(maxHeight: 200),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                               color: Colors.black26,
                               blurRadius: 4,
@@ -190,19 +275,25 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                           ],
                         ),
                         child: ListView.builder(
-                          // 스크롤 가능하게
                           shrinkWrap: true,
                           itemCount: suggestions.length,
                           itemBuilder: (context, i) {
                             final s = suggestions[i];
                             return ListTile(
-                              title: Text(s['placeName'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              subtitle: Text(s['address'], style: const TextStyle(fontSize: 14)),
+                              title: Text(s['placeName'],
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                              subtitle: Text(s['address'],
+                                  style: const TextStyle(fontSize: 14)),
                               trailing: ElevatedButton(
-                                onPressed: () => _addBookmark(s),
+                                onPressed: () => _addBookmark(s,
+                                    isHome: _isHomeMode),
                                 child: const Text('추가'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green.shade200,
+                                  backgroundColor: _isHomeMode
+                                      ? Colors.blue.shade100
+                                      : Colors.green.shade200,
                                   foregroundColor: Colors.black,
                                 ),
                               ),
@@ -219,7 +310,6 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
       ),
     );
   }
-
 }
 
 class LatLng {

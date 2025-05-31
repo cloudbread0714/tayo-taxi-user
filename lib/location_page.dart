@@ -5,8 +5,10 @@ import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart' as latlng;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import 'pickup_location_page.dart';
+import 'package:app_tayo_taxi/PickUpList_page.dart';
 import 'mypage.dart';
 import 'bookmarkPlaces.dart';
 
@@ -31,6 +33,44 @@ class _LocationPageState extends State<LocationPage> {
     super.initState();
     _getCurrentLocation();
   }
+
+  Future<void> _goHomeAndNavigate() async {
+    if (currentLatLng == null) return;  // 안전 검사
+
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final snap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('bookmarks')
+        .where('isHome', isEqualTo: true)
+        .limit(1)
+        .get();
+
+    if (snap.docs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('집 주소가 설정되지 않았습니다.')),
+      );
+      return;
+    }
+
+    final data = snap.docs.first.data() as Map<String, dynamic>;
+    final homeLat = data['lat'] as double;
+    final homeLng = data['lng'] as double;
+    final homeName = data['placeName'] as String;
+
+    // 바로 내비게이션 페이지로 이동
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PickupListPage(
+          currentLocation: currentLatLng!,
+          destinationLocation: latlng.LatLng(homeLat, homeLng),
+          suggestedPlaceName: homeName,
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -123,144 +163,173 @@ class _LocationPageState extends State<LocationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 30),
-                  const Text(
-                    '출발/도착지 설정',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  const Icon(Icons.local_taxi, size: 80, color: Colors.green),
-                  const SizedBox(height: 30),
-                  TextField(
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.my_location),
-                      labelText: '출발지: $currentAddress',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Icon(Icons.local_taxi, size: 100, color: Colors.green),
+                      const SizedBox(height: 20),
+                      const Text(
+                        '출발/도착지 설정',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: destinationController,
-                    onChanged: _fetchPlaceSuggestions,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.place),
-                      labelText: '목적지 입력',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...suggestions.map((s) => ListTile(
-                    title: Text(s),
-                    onTap: () => _selectSuggestion(s),
-                  )),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (currentLatLng == null) return;
-
-                      if (destinationLatLng == null &&
-                          destinationController.text.isNotEmpty) {
-                        await _convertAddressToLatLng(destinationController.text);
-                      }
-
-                      if (destinationLatLng == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('목적지를 선택하거나 입력해주세요.')),
-                        );
-                        return;
-                      }
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PickupLocationPage(
-                            suggestedPlaceName: destinationController.text,
-                            currentLocation: currentLatLng!,
-                            destinationLocation: destinationLatLng!, // ✅ 수정된 부분
+                      const SizedBox(height: 40),
+                      TextField(
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.my_location),
+                          labelText: '출발지: $currentAddress',
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 22.0, horizontal: 16.0),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade200,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text('다음', style: TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: destinationController,
+                        onChanged: _fetchPlaceSuggestions,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.place),
+                          labelText: '목적지 입력',
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 22.0, horizontal: 16.0),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ...suggestions.map((s) => ListTile(
+                        title: Text(s),
+                        onTap: () => _selectSuggestion(s),
+                      )),
+                      const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () async {
-                          // 즐겨찾기 페이지로 이동 → 돌아올 때 선택된 장소 정보 받기
-                          final result = await Navigator.push<Map<String, dynamic>>(
+                          // '다음' 로직 (변경 없음)
+                          if (currentLatLng == null) return;
+                          if (destinationLatLng == null &&
+                              destinationController.text.isNotEmpty) {
+                            await _convertAddressToLatLng(
+                                destinationController.text);
+                          }
+                          if (destinationLatLng == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('목적지를 선택하거나 입력해주세요.')),
+                            );
+                            return;
+                          }
+                          Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const BookmarkPlacesPage()),
+                            MaterialPageRoute(
+                              builder: (_) => PickupListPage(
+                                currentLocation: currentLatLng!,
+                                destinationLocation: destinationLatLng!,
+                                suggestedPlaceName:
+                                destinationController.text,
+                              ),
+                            ),
                           );
-                          if (result != null) {
-                            // 바로 목적지 입력란에 반영
-                            setState(() {
-                              destinationController.text = result['placeName'];
-                              destinationLatLng = latlng.LatLng(
-                                result['lat'],
-                                result['lng'],
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade200,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          textStyle: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        child:
+                        const Text('다음', style: TextStyle(fontSize: 20)),
+                      ),
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () async {
+                              final result =
+                              await Navigator.push<Map<String, dynamic>>(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                    const BookmarkPlacesPage()),
                               );
-                            });
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          side: const BorderSide(color: Colors.grey),
-                        ),
-                        child: const Text('즐겨찾기'),
+                              if (result != null) {
+                                setState(() {
+                                  destinationController.text =
+                                  result['placeName'];
+                                  destinationLatLng = latlng.LatLng(
+                                    result['lat'],
+                                    result['lng'],
+                                  );
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(color: Colors.grey),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15, horizontal: 30),
+                              minimumSize: const Size(150, 50),
+                              textStyle: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('즐겨찾기'),
+                          ),
+                          ElevatedButton(
+                            onPressed: _goHomeAndNavigate,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                                side:
+                                const BorderSide(color: Colors.grey),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 15, horizontal: 30),
+                                minimumSize: const Size(150, 50),
+                                textStyle: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(12))),
+                            child: const Text('집으로'),
+                          ),
+                        ],
                       ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const MyPage()),
-                          );
-                          if (result != null) {
-
-                            final desc = result['description'] as String;
-                            final coords = result['latlng'] as latlng.LatLng;
-                            setState(() {
-                              destinationController.text = desc;
-                              destinationLatLng = coords;
-                              suggestions.clear();
-                            });
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          side: const BorderSide(color: Colors.grey),
-                        ),
-                        child: const Text('마이페이지'),
-                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
             ),
-          ),
+
+            // 추가할 마이페이지 아이콘 버튼
+            Positioned(
+              top: 16,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.person, size: 28, color: Colors.black),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyPage()),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

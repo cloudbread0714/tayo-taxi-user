@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login_page.dart'; // 로그인 페이지로 돌아가기
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -10,18 +11,22 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final idController = TextEditingController();
-  final passwordController = TextEditingController();
-  final nameController = TextEditingController();
-  final phoneController = TextEditingController();
+  final _idController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _guardianNameController = TextEditingController();    // 보호자 이름
+  final _guardianPhoneController = TextEditingController();   // 보호자 전화번호
 
   void _signUp() async {
-    final id = idController.text.trim();
-    final password = passwordController.text.trim();
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
+    final id            = _idController.text.trim();
+    final pw            = _passwordController.text.trim();
+    final name          = _nameController.text.trim();
+    final phone         = _phoneController.text.trim();
+    final guardianName  = _guardianNameController.text.trim();
+    final guardianPhone = _guardianPhoneController.text.trim();
 
-    if (id.isEmpty || password.isEmpty || name.isEmpty || phone.isEmpty) {
+    if ([id, pw, name, phone, guardianName, guardianPhone].any((s) => s.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('모든 필드를 입력해주세요.')),
       );
@@ -29,37 +34,45 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     try {
-      // Firebase Authentication 회원가입
-      UserCredential cred = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: id,
-        password: password,
-      );
+      final cred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: id, password: pw);
       final user = cred.user;
-
-      // Firestore에 추가 정보 저장
       if (user != null) {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .set({
+          'email': id,
           'name': name,
           'phone': phone,
+          'guardian': {
+            'name': guardianName,
+            'phone': guardianPhone,
+          },
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
 
-      // 성공 다이얼로그
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('회원가입 성공'),
-          content: Text('아이디: $id\n이름: $name\n전화번호: $phone'),
+          content: Text(
+              '아이디: $id\n'
+                  '이름: $name\n'
+                  '전화번호: $phone\n'
+                  '보호자 이름: $guardianName\n'
+                  '보호자 전화: $guardianPhone'
+          ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
+                Navigator.of(context).pop();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                );
               },
               child: const Text('확인'),
             ),
@@ -67,12 +80,9 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       );
     } on FirebaseAuthException catch (e) {
-      String message;
-      if (e.code == 'email-already-in-use') {
-        message = '중복된 아이디입니다';
-      } else {
-        message = e.message ?? '알 수 없는 오류';
-      }
+      final message = (e.code == 'email-already-in-use')
+          ? '중복된 아이디입니다'
+          : e.message ?? '알 수 없는 오류';
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -92,48 +102,72 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('회원가입')),
+      appBar: AppBar(
+        title: const Text('회원가입', style: TextStyle(fontSize: 20)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              _buildRow(
-                label: '아이디',
-                controller: idController,
-                keyboardType: TextInputType.emailAddress,
-                action: TextInputAction.next,
-              ),
-              _buildRow(
-                label: '비밀번호',
-                controller: passwordController,
-                obscure: true,
-                keyboardType: TextInputType.visiblePassword,
-                action: TextInputAction.next,
-              ),
-              _buildRow(
-                label: '이름',
-                controller: nameController,
-                keyboardType: TextInputType.text,
-                action: TextInputAction.next,
-              ),
-              _buildRow(
-                label: '전화번호',
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                action: TextInputAction.done,
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _signUp,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade100,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  minimumSize: const Size.fromHeight(50),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel('아이디'),
+                      const SizedBox(height: 8),
+                      _buildInputField(controller: _idController),
+
+                      const SizedBox(height: 24),
+                      _buildLabel('비밀번호'),
+                      const SizedBox(height: 8),
+                      _buildInputField(controller: _passwordController, obscureText: true),
+
+                      const SizedBox(height: 24),
+                      _buildLabel('이름'),
+                      const SizedBox(height: 8),
+                      _buildInputField(controller: _nameController),
+
+                      const SizedBox(height: 24),
+                      _buildLabel('전화번호'),
+                      const SizedBox(height: 8),
+                      _buildInputField(controller: _phoneController, keyboardType: TextInputType.phone),
+
+                      const SizedBox(height: 24),
+                      _buildLabel('보호자 이름'),
+                      const SizedBox(height: 8),
+                      _buildInputField(controller: _guardianNameController),
+
+                      const SizedBox(height: 24),
+                      _buildLabel('보호자 전화번호'),
+                      const SizedBox(height: 8),
+                      _buildInputField(controller: _guardianPhoneController, keyboardType: TextInputType.phone),
+                    ],
+                  ),
                 ),
-                child: const Text('가입하기', style: TextStyle(fontSize: 18)),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _signUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade100,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('가입하기', style: TextStyle(fontSize: 18)),
+                ),
               ),
             ],
           ),
@@ -142,43 +176,32 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  Widget _buildRow({
-    required String label,
+  Widget _buildLabel(String text) {
+    return Text(text,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildInputField({
     required TextEditingController controller,
-    bool obscure = false,
-    required TextInputType keyboardType,
-    required TextInputAction action,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(label, style: const TextStyle(fontSize: 16)),
-          ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              obscureText: obscure,
-              keyboardType: keyboardType,
-              textInputAction: action,
-              autocorrect: true,
-              enableSuggestions: true,
-              decoration: const InputDecoration(
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                contentPadding: EdgeInsets.symmetric(vertical: 8.0),
-                isDense: true,
-              ),
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          isDense: true,
+        ),
+        style: const TextStyle(fontSize: 18),
       ),
     );
   }
