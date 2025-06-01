@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'ride_tracking_page.dart'; // 실제 전환할 페이지 import
+import 'ride_in_progress_page.dart'; // 실제 전환할 페이지 import
 import 'destination_input_page.dart';       // 메인 LocationPage import
 
 class PassengerWaitingPage extends StatelessWidget {

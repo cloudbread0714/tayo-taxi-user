@@ -4,7 +4,7 @@ import 'destination_input_page.dart';
 import 'user_login_page.dart';
 import 'user_info_form.dart';
 import 'family_info_form.dart';
-import 'rife_history_page.dart';
+import 'ride_history_page.dart';
 
 class MyPage extends StatelessWidget {
   const MyPage({super.key});
