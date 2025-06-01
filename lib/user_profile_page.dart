@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'location_page.dart';
-import 'login_page.dart';
-import 'MyInfo.dart';
-import 'familyInfo.dart';
-import 'MyOrderHistory.dart';
+import 'destination_input_page.dart';
+import 'user_login_page.dart';
+import 'user_info_form.dart';
+import 'family_info_form.dart';
+import 'rife_history_page.dart';
 
 class MyPage extends StatelessWidget {
   const MyPage({super.key});

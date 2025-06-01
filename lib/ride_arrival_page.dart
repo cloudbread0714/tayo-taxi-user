@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'location_page.dart';
+import 'destination_input_page.dart';
 
 class ArrivedDestinationPage extends StatelessWidget {
   const ArrivedDestinationPage({Key? key}) : super(key: key);

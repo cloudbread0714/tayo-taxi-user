@@ -7,8 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'ride_request.dart';
-import 'passenger_waiting_page.dart';
+import 'ride_request_model.dart';
+import 'ride_waiting_page.dart';
 
 class PickupLocationPage extends StatefulWidget {
   final String suggestedPlaceName;

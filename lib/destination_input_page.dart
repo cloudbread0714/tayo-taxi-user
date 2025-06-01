@@ -8,9 +8,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:app_tayo_taxi/PickUpList_page.dart';
-import 'mypage.dart';
-import 'bookmarkPlaces.dart';
+import 'package:app_tayo_taxi/pickup_place_list_page.dart';
+import 'user_profile_page.dart';
+import 'bookmark_places_page.dart';
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
 
