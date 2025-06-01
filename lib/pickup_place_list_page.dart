@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'select_pickup_loacation_page.dart';
+import 'select_pickup_location_page.dart';
 
 class PickupListPage extends StatefulWidget {
   final LatLng currentLocation;
