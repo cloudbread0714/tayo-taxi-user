@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-import 'MyOrderHistoryDetails.dart';
+import 'ride_history_detail_page.dart';
 
 class MyOrderHistory extends StatelessWidget {
   const MyOrderHistory({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_page.dart'; // 로그인 페이지로 돌아가기
+import 'user_login_page.dart'; // 로그인 페이지로 돌아가기
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});

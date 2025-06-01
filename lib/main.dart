@@ -1,36 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart'; // Naver 지도 SDK
 
 import 'firebase_options.dart';
-import 'login_page.dart';
+import 'user_login_page.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Flutter 엔진 바인딩
+  // Flutter 엔진 초기화
+  WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env"); // .env 파일 로딩
+  // .env 파일 로드 (.env 파일은 프로젝트 루트에 위치해야 함)
+  // 예시 내용:
+  // NAVER_CLIENT_ID=YOUR_ACTUAL_CLIENT_ID_HERE
+  await dotenv.load(fileName: ".env");
 
-  await Firebase.initializeApp( // Firebase 초기화
+  // Firebase 초기화
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Naver 지도 초기화
-  final naverMap = FlutterNaverMap(); // 인스턴스 생성
-  await naverMap.init(
-    clientId: dotenv.env['NAVER_CLIENT_ID']!,
-    onAuthFailed: (e) => debugPrint("❌ 네이버 지도 인증 실패: $e"),
-  );
-
-  // GOOGLE API 키 확인 (옵션)
-  final apiKey = dotenv.env['GOOGLE_API_KEY'];
-  if (apiKey == null || apiKey.isEmpty) {
-    debugPrint("❌ GOOGLE_API_KEY가 .env에 없거나 비어 있습니다.");
-  } else {
-    debugPrint("✅ GOOGLE_API_KEY가 성공적으로 로딩되었습니다.");
+  // 🔐 Naver Map SDK 초기화 (clientId는 .env 파일에서 로드)
+  final naverClientId = dotenv.env['NAVER_CLIENT_ID'];
+  if (naverClientId == null || naverClientId.isEmpty) {
+    debugPrint('.env 파일에 NAVER_CLIENT_ID가 누락되어 있습니다.');
+    return; // 앱 실행 중단
   }
 
-  runApp(const MyApp()); // 앱 실행
+  final naverMap = FlutterNaverMap();
+  await naverMap.init(
+    clientId: naverClientId,
+    onAuthFailed: (e) => debugPrint(' NaverMap 인증 실패: $e'),
+  );
+
+  // 앱 실행
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -46,7 +50,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Arial',
       ),
-      home: const LoginPage(), // 시작 페이지 설정
+      home: const LoginPage(), // 시작 화면
     );
   }
 }

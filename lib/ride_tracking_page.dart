@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'location_page.dart';
-import 'ArrivedDestination.dart';
+import 'destination_input_page.dart';
+import 'ride_arrival_page.dart';
 
 class RideInProgressPage extends StatefulWidget {
   final String requestId;
