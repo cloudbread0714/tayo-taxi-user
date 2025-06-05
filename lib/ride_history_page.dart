@@ -1,23 +1,27 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-import 'MyOrderHistoryDetails.dart';
+import 'ride_history_detail_page.dart';
 
 class MyOrderHistory extends StatelessWidget {
   const MyOrderHistory({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     final userId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           '최근 이용 내역',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: screenWidth * 0.061, fontWeight: FontWeight.bold),
         ),
         leading: const BackButton(),
         backgroundColor: Colors.white,
@@ -36,7 +40,7 @@ class MyOrderHistory extends StatelessWidget {
             return Center(
               child: Text(
                 '에러 발생: ${snap.error}',
-                style: const TextStyle(fontSize: 18, color: Colors.red),
+                style: TextStyle(fontSize: screenWidth * 0.050, color: Colors.red),
               ),
             );
           }
@@ -46,10 +50,12 @@ class MyOrderHistory extends StatelessWidget {
 
           final docs = snap.data!.docs;
           if (docs.isEmpty) {
-            return const Center(
-              child: Text(
+            return Center(
+              child: AutoSizeText(
                 '이용 내역이 없습니다',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: screenWidth * 0.050),
+                maxLines: 1,
+                minFontSize: 14,
               ),
             );
           }
@@ -105,12 +111,12 @@ class MyOrderHistory extends StatelessWidget {
                           dateStr,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: screenWidth * 0.056,
                             fontWeight: FontWeight.bold,
                             color: Colors.green.shade700,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: screenHeight * 0.015),
 
                         // 출발지
                         Row(
@@ -118,22 +124,24 @@ class MyOrderHistory extends StatelessWidget {
                             const Icon(Icons.my_location,
                                 color: Colors.green, size: 24),
                             const SizedBox(width: 8),
-                            const Text(
-                              '출발지:',
+                            Text(
+                              '출발지: ',
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                  fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
+                              child: AutoSizeText(
                                 pickup,
-                                style: const TextStyle(fontSize: 18),
+                                style: TextStyle(fontSize: screenWidth * 0.050),
+                                maxLines: 2,
+                                minFontSize: 13,
                                 textAlign: TextAlign.right,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: screenHeight * 0.015),
 
                         // 도착지
                         Row(
@@ -141,16 +149,18 @@ class MyOrderHistory extends StatelessWidget {
                             const Icon(Icons.place,
                                 color: Colors.green, size: 24),
                             const SizedBox(width: 8),
-                            const Text(
-                              '도착지:',
+                            Text(
+                              '도착지: ',
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                  fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
+                              child: AutoSizeText(
                                 destination,
-                                style: const TextStyle(fontSize: 18),
+                                style: TextStyle(fontSize: screenWidth * 0.050),
+                                maxLines: 2,
+                                minFontSize: 13,
                                 textAlign: TextAlign.right,
                               ),
                             ),

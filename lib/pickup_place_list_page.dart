@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'pickup_location_page.dart';
+import 'select_pickup_location_page.dart';
 
 class PickupListPage extends StatefulWidget {
   final LatLng currentLocation;
@@ -123,9 +124,12 @@ class _PickupListPageState extends State<PickupListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('픽업 장소 선택', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        title: Text('픽업 장소 선택', style: TextStyle(fontSize: screenWidth * 0.056, fontWeight: FontWeight.bold)),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -134,26 +138,28 @@ class _PickupListPageState extends State<PickupListPage> {
           : Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 20),
-          const Padding(
+          SizedBox(height: screenHeight * 0.025),
+          Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(
-              child: Text(
+              child: AutoSizeText(
                 '택시를 탑승할 위치를 선택해주세요',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: screenWidth * 0.056,
                   fontWeight: FontWeight.bold,
                 ),
+                maxLines: 1,
+                minFontSize: 12,
               ),
             ),
           ),
-          const SizedBox(height: 30),
+          SizedBox(height: screenHeight * 0.037),
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.044),
               itemCount: nearbyPlaces.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, __) => SizedBox(height: screenHeight * 0.015),
               itemBuilder: (context, index) {
                 final place = nearbyPlaces[index];
                 return Card(
@@ -175,18 +181,22 @@ class _PickupListPageState extends State<PickupListPage> {
                               FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
-                                child: Text(
+                                child: AutoSizeText(
                                   place['name'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
+                                  style: TextStyle(
+                                    fontSize: screenWidth * 0.050,
                                     fontWeight: FontWeight.bold,
                                   ),
+                                  maxLines: 1,
+                                  minFontSize: 12,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
+                              SizedBox(height: screenHeight * 0.005),
+                              AutoSizeText(
                                 place['address'],
-                                style: const TextStyle(fontSize: 16),
+                                style: TextStyle(fontSize: screenWidth * 0.044),
+                                maxLines: 2,
+                                minFontSize: 14,
                               ),
                             ],
                           ),
@@ -215,8 +225,8 @@ class _PickupListPageState extends State<PickupListPage> {
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(
                                 vertical: 15, horizontal: 24),
-                            textStyle: const TextStyle(
-                                fontSize: 16,
+                            textStyle: TextStyle(
+                                fontSize: screenWidth * 0.044,
                                 fontWeight: FontWeight.bold),
                             shape: RoundedRectangleBorder(
                               borderRadius:
@@ -224,7 +234,10 @@ class _PickupListPageState extends State<PickupListPage> {
                             ),
                           ),
                           child:
-                          const Text('선택', style: TextStyle(fontSize: 17)),
+                          AutoSizeText('선택', style: TextStyle(fontSize: screenWidth * 0.047),
+                            maxLines: 1,
+                            minFontSize: 12,
+                          ),
                         ),
                       ],
                     ),

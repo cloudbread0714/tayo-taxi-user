@@ -7,10 +7,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
-import 'package:app_tayo_taxi/PickUpList_page.dart';
-import 'mypage.dart';
-import 'bookmarkPlaces.dart';
+import 'package:app_tayo_taxi/pickup_place_list_page.dart';
+import 'user_profile_page.dart';
+import 'bookmark_places_page.dart';
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
 
@@ -35,7 +36,7 @@ class _LocationPageState extends State<LocationPage> {
   }
 
   Future<void> _goHomeAndNavigate() async {
-    if (currentLatLng == null) return;  // 안전 검사
+    if (currentLatLng == null) return;
 
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final snap = await FirebaseFirestore.instance
@@ -53,7 +54,7 @@ class _LocationPageState extends State<LocationPage> {
       return;
     }
 
-    final data = snap.docs.first.data() as Map<String, dynamic>;
+    final data = snap.docs.first.data();
     final homeLat = data['lat'] as double;
     final homeLng = data['lng'] as double;
     final homeName = data['placeName'] as String;
@@ -161,25 +162,33 @@ class _LocationPageState extends State<LocationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: SafeArea(
         child: Stack(
           children: [
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.067),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.local_taxi, size: 100, color: Colors.green),
-                      const SizedBox(height: 20),
-                      const Text(
+                      Icon(Icons.local_taxi, size: screenWidth * 0.278, color: Colors.green),
+                      SizedBox(height: screenHeight * 0.025),
+                      AutoSizeText(
                         '출발/도착지 설정',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: screenWidth * 0.094,
+                            fontWeight: FontWeight.bold
+                        ),
+                        maxLines: 1,
+                        minFontSize: 16,
                       ),
-                      const SizedBox(height: 40),
+                      SizedBox(height: screenHeight * 0.050),
                       TextField(
                         readOnly: true,
                         decoration: InputDecoration(
@@ -192,7 +201,7 @@ class _LocationPageState extends State<LocationPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: screenHeight * 0.025),
                       TextField(
                         controller: destinationController,
                         onChanged: _fetchPlaceSuggestions,
@@ -206,15 +215,15 @@ class _LocationPageState extends State<LocationPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: screenHeight * 0.013),
                       ...suggestions.map((s) => ListTile(
                         title: Text(s),
                         onTap: () => _selectSuggestion(s),
                       )),
-                      const SizedBox(height: 20),
+                      SizedBox(height: screenHeight * 0.025),
                       ElevatedButton(
                         onPressed: () async {
-                          // '다음' 로직 (변경 없음)
+                          // '다음' 로직
                           if (currentLatLng == null) return;
                           if (destinationLatLng == null &&
                               destinationController.text.isNotEmpty) {
@@ -244,13 +253,13 @@ class _LocationPageState extends State<LocationPage> {
                           backgroundColor: Colors.green.shade200,
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          textStyle: TextStyle(
+                              fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
                         ),
                         child:
-                        const Text('다음', style: TextStyle(fontSize: 20)),
+                        Text('다음', style: TextStyle(fontSize: screenWidth * 0.056)),
                       ),
-                      const SizedBox(height: 30),
+                      SizedBox(height: screenHeight * 0.037),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -281,12 +290,13 @@ class _LocationPageState extends State<LocationPage> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 15, horizontal: 30),
                               minimumSize: const Size(150, 50),
-                              textStyle: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                              textStyle: TextStyle(
+                                  fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text('즐겨찾기'),
+                            child: const AutoSizeText(
+                                '즐겨찾기', maxLines: 1, minFontSize: 14,),
                           ),
                           ElevatedButton(
                             onPressed: _goHomeAndNavigate,
@@ -298,29 +308,29 @@ class _LocationPageState extends State<LocationPage> {
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 15, horizontal: 30),
                                 minimumSize: const Size(150, 50),
-                                textStyle: const TextStyle(
-                                    fontSize: 18,
+                                textStyle: TextStyle(
+                                    fontSize: screenWidth * 0.050,
                                     fontWeight: FontWeight.bold),
                                 shape: RoundedRectangleBorder(
                                     borderRadius:
                                     BorderRadius.circular(12))),
-                            child: const Text('집으로'),
+                            child: const AutoSizeText(
+                                '집으로', maxLines: 1, minFontSize: 14,),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: screenHeight * 0.025),
                     ],
                   ),
                 ),
               ),
             ),
 
-            // 추가할 마이페이지 아이콘 버튼
             Positioned(
               top: 16,
               right: 16,
               child: IconButton(
-                icon: const Icon(Icons.person, size: 28, color: Colors.black),
+                icon: Icon(Icons.person, size: screenWidth * 0.078, color: Colors.black),
                 onPressed: () {
                   Navigator.push(
                     context,
