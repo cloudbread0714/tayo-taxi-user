@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'signup_page.dart';
-import 'location_page.dart';
+import 'user_signup_page.dart';
+import 'destination_input_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -68,15 +68,18 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.067),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 85),
+              SizedBox(height: screenHeight * 0.106),
               Center(
                 child: Icon(
                   Icons.local_taxi,
@@ -84,24 +87,24 @@ class _LoginPageState extends State<LoginPage> {
                   color: Colors.green,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: screenHeight * 0.020),
               Center(
                 child: Text(
                   '로그인',
                   style: TextStyle(
-                    fontSize: 36,
+                    fontSize: screenWidth * 0.100,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: screenHeight * 0.050),
               TextField(
                 controller: emailController,
-                style: const TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: screenWidth * 0.050),
                 decoration: InputDecoration(
                   labelText: '아이디',
-                  labelStyle: const TextStyle(fontSize: 18),
+                  labelStyle: TextStyle(fontSize: screenWidth * 0.050),
                   contentPadding: const EdgeInsets.symmetric(
                       vertical: 22.0, horizontal: 16.0),
                   border: OutlineInputBorder(
@@ -109,14 +112,14 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: screenHeight * 0.025),
               TextField(
                 controller: passwordController,
                 obscureText: true,
-                style: const TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: screenWidth * 0.050),
                 decoration: InputDecoration(
                   labelText: '비밀번호',
-                  labelStyle: const TextStyle(fontSize: 18),
+                  labelStyle: TextStyle(fontSize: screenWidth * 0.050),
                   contentPadding: const EdgeInsets.symmetric(
                       vertical: 22.0, horizontal: 16.0),
                   border: OutlineInputBorder(
@@ -124,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: screenHeight * 0.037),
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
@@ -135,12 +138,12 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   '로그인',
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: screenWidth * 0.056),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: screenHeight * 0.020),
               ElevatedButton(
                 onPressed: _goToSignUp,
                 style: ElevatedButton.styleFrom(
@@ -151,25 +154,25 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   '회원가입',
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: screenWidth * 0.056),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: screenHeight * 0.015),
               Center(
                 child: TextButton(
                   onPressed: () {},
-                  child: const Text(
+                  child: Text(
                     '아이디/비밀번호 찾기',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: screenWidth * 0.044,
                       decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: screenHeight * 0.050),
             ],
           ),
         ),

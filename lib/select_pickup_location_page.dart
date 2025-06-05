@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -7,8 +8,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'ride_request.dart';
-import 'passenger_waiting_page.dart';
+import 'ride_request_model.dart';
+import 'ride_waiting_page.dart';
 
 class PickupLocationPage extends StatefulWidget {
   final String suggestedPlaceName;
@@ -80,7 +81,7 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
         _addMarkersAndAdjustCamera();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("근처 편의점을 찾을 수 없습니다.")),
+          const SnackBar(content: Text("근처 탑승 장소를 찾을 수 없습니다.")),
         );
       }
     } catch (e) {
@@ -127,7 +128,7 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
 
     rideRequestDocId = docRef.id;
 
-    // 수락을 기다리지 않고 바로 페이지 전환
+    // 수락 기다리지 않고 바로 페이지 전환
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -142,6 +143,9 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     final currentNLatLng = NLatLng(
       widget.currentLocation.latitude,
       widget.currentLocation.longitude,
@@ -149,52 +153,34 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('픽업 위치', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        title: Text('픽업 위치', style: TextStyle(fontSize: screenWidth * 0.056, fontWeight: FontWeight.bold)),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 18),
+            SizedBox(height: screenHeight * 0.022),
             Text(
               '픽업 위치',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: screenWidth * 0.050,
                 fontWeight: FontWeight.normal,
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
+            SizedBox(height: screenHeight * 0.013),
+            AutoSizeText(
               pickupPlaceName,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 23,
+                fontSize: screenWidth * 0.064,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.green.shade700,
               ),
+              maxLines: 1,
+              minFontSize: 12,
             ),
-            /*Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '픽업 위치: ',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                  TextSpan(
-                    text: pickupPlaceName,
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),*/
-            const SizedBox(height: 30),
+            SizedBox(height: screenHeight * 0.037),
             Expanded(
               child: NaverMap(
                 options: NaverMapViewOptions(
@@ -209,9 +195,17 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
                 },
               ),
             ),
-            const SizedBox(height: 30),
+            SizedBox(height: screenHeight * 0.02),
+            AutoSizeText("이 장소로 먼저 이동해 주세요.",
+              style: TextStyle(
+                  fontSize: screenWidth * 0.05,
+                  fontWeight: FontWeight.bold, color: Colors.black87),
+              maxLines: 1,
+              minFontSize: 15,
+            ),
+            SizedBox(height: screenHeight * 0.037),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 100),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.3),
               child: SizedBox(
                 width: double.infinity,
                 height: 60,
@@ -220,16 +214,19 @@ class _PickupLocationPageState extends State<PickupLocationPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade200,
                     foregroundColor: Colors.black,
-                    textStyle: const TextStyle(fontSize: 18),
+                    textStyle: TextStyle(fontSize: screenWidth * 0.050),
                   ),
-                  child: const Text("택시 호출하기",
-                      style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold)),
+                  child: AutoSizeText("택시 호출하기",
+                      style: TextStyle(
+                          fontSize: screenWidth * 0.061,
+                          fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    minFontSize: 15,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: screenHeight * 0.050),
           ],
         ),
       ),

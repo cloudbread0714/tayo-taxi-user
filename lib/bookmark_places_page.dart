@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class BookmarkPlacesPage extends StatefulWidget {
   const BookmarkPlacesPage({Key? key}) : super(key: key);
@@ -128,9 +129,18 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('즐겨찾기', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        title: Text(
+          '즐겨찾기',
+          style: TextStyle(
+              fontSize: screenWidth * 0.056,
+              fontWeight: FontWeight.bold
+          ),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
@@ -144,10 +154,10 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
               ListTile(
                 leading: const Icon(Icons.home, color: Colors.green),
                 title: Text(_home!['placeName'],
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold)),
                 subtitle: Text(_home!['address'],
-                    style: const TextStyle(fontSize: 14)),
+                    style: TextStyle(fontSize: screenWidth * 0.039)),
                 trailing: TextButton(
                   onPressed: () {
                     setState(() {
@@ -174,7 +184,7 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
+            SizedBox(height: screenHeight * 0.020),
             // 검색창
             TextField(
               controller: _searchController,
@@ -189,7 +199,7 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: screenHeight * 0.010),
             Expanded(
               child: Stack(
                 children: [
@@ -209,8 +219,16 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                         return d['isHome'] != true;
                       }).toList();
                       if (list.isEmpty) {
-                        return const Center(
-                            child: Text('등록된 즐겨찾기가 없습니다.'));
+                        return Center(
+                            child: AutoSizeText(
+                                '등록된 즐겨찾기가 없습니다.',
+                              style: TextStyle(
+                                  fontSize: screenWidth * 0.050
+                              ),
+                              maxLines: 1,
+                              minFontSize: 12,
+                            )
+                        );
                       }
                       return ListView(
                         padding: const EdgeInsets.only(top: 0),
@@ -225,14 +243,16 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                 title: Text(
                                   data['placeName'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
+                                  style: TextStyle(
+                                    fontSize: screenWidth * 0.050,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                subtitle: Text(
+                                subtitle: AutoSizeText(
                                   data['address'],
-                                  style: const TextStyle(fontSize: 14),
+                                  style: TextStyle(fontSize: screenWidth * 0.039),
+                                  maxLines: 1,
+                                  minFontSize: 12,
                                 ),
                                 onTap: () {
                                   Navigator.pop(context, {
@@ -281,21 +301,21 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                             final s = suggestions[i];
                             return ListTile(
                               title: Text(s['placeName'],
-                                  style: const TextStyle(
-                                      fontSize: 18,
+                                  style: TextStyle(
+                                      fontSize: screenWidth * 0.050,
                                       fontWeight: FontWeight.bold)),
                               subtitle: Text(s['address'],
-                                  style: const TextStyle(fontSize: 14)),
+                                  style: TextStyle(fontSize: screenWidth * 0.039)),
                               trailing: ElevatedButton(
                                 onPressed: () => _addBookmark(s,
                                     isHome: _isHomeMode),
-                                child: const Text('추가'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _isHomeMode
                                       ? Colors.blue.shade100
                                       : Colors.green.shade200,
                                   foregroundColor: Colors.black,
                                 ),
+                                child: const Text('추가'),
                               ),
                             );
                           },

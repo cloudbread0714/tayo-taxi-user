@@ -1,9 +1,9 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-import 'ride_in_progress_page.dart'; // 실제 전환할 페이지 import
-import 'location_page.dart';       // 메인 LocationPage import
+import 'ride_in_progress_page.dart';
+import 'destination_input_page.dart';
 
 class PassengerWaitingPage extends StatelessWidget {
   final String requestId;
@@ -15,6 +15,8 @@ class PassengerWaitingPage extends StatelessWidget {
     final docRef = FirebaseFirestore.instance
         .collection('ride_requests')
         .doc(requestId);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return StreamBuilder<DocumentSnapshot>(
       stream: docRef.snapshots(),
@@ -66,7 +68,7 @@ class PassengerWaitingPage extends StatelessWidget {
             backgroundColor: Colors.green.shade50,
             body: Center(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 32),
+                margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.089),
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -83,16 +85,62 @@ class PassengerWaitingPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.local_taxi, color: Colors.green, size: 80),
-                    const SizedBox(height: 16),
-                    const Text(
+                    SizedBox(height: screenHeight * 0.020),
+                    AutoSizeText(
                       '택시가 배정되었습니다!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: screenWidth * 0.067, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      minFontSize: 12,
                     ),
-                    const SizedBox(height: 12),
-                    Text('기사님: $driverName', style: const TextStyle(fontSize: 20)),
-                    const SizedBox(height: 8),
-                    Text('차량 번호: $carNumber', style: const TextStyle(fontSize: 20)),
+
+                    SizedBox(height: screenHeight * 0.015),
+
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '기사님: ',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.056,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: driverName,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.056,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.010),
+
+                    AutoSizeText.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '차량 번호: ',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.056,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: carNumber,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.056,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      minFontSize: 12,
+                    ),
                   ],
                 ),
               ),
@@ -111,7 +159,7 @@ class PassengerWaitingPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 200),
+                  SizedBox(height: screenHeight * 0.250),
                   Center(
                     child: SizedBox(
                       width: 70,
@@ -122,14 +170,15 @@ class PassengerWaitingPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 60),
-                  const Text(
+                  SizedBox(height: screenHeight * 0.05),
+                  AutoSizeText(
                     '수락 대기 중...',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 30),
+                    style: TextStyle(fontSize: screenWidth * 0.083),
+                    maxLines: 1,
+                    minFontSize: 14,
                   ),
-                  //const Center(child: _LoadingIndicator()),
-                  const SizedBox(height: 130),
+                  SizedBox(height: screenHeight * 0.1),
                   // 통합 정보 박스
                   Container(
                     width: double.infinity,
@@ -138,14 +187,44 @@ class PassengerWaitingPage extends StatelessWidget {
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      '출발지: $pickupPlace\n도착지: $destPlace',
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '출발지: ',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.050,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '$pickupPlace\n',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.050,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+
+                          TextSpan(
+                            text: '도착지: ',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.050,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: destPlace,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.050,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 18),
                     ),
                   ),
-                  //const Spacer(),
-                  const SizedBox(height: 50),
+                  SizedBox(height: screenHeight * 0.05),
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
@@ -154,8 +233,8 @@ class PassengerWaitingPage extends StatelessWidget {
                         backgroundColor: Colors.red.shade100,
                         foregroundColor: Colors.red.shade800,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        minimumSize: const Size(160, 48), // 버튼 가로 길이 조정
-                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        minimumSize: const Size(160, 48),
+                        textStyle: TextStyle(fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       child: const Text('호출 취소'),

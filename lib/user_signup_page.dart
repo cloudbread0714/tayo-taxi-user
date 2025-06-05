@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_page.dart'; // 로그인 페이지로 돌아가기
+import 'user_login_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -101,9 +101,12 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('회원가입', style: TextStyle(fontSize: 20)),
+        title: Text('회원가입', style: TextStyle(fontSize: screenWidth * 0.056)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -123,38 +126,38 @@ class _SignUpPageState extends State<SignUpPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildLabel('아이디'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.010),
                       _buildInputField(controller: _idController),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: screenHeight * 0.030),
                       _buildLabel('비밀번호'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.010),
                       _buildInputField(controller: _passwordController, obscureText: true),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: screenHeight * 0.030),
                       _buildLabel('이름'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.010),
                       _buildInputField(controller: _nameController),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: screenHeight * 0.030),
                       _buildLabel('전화번호'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.010),
                       _buildInputField(controller: _phoneController, keyboardType: TextInputType.phone),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: screenHeight * 0.030),
                       _buildLabel('보호자 이름'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.010),
                       _buildInputField(controller: _guardianNameController),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: screenHeight * 0.030),
                       _buildLabel('보호자 전화번호'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.010),
                       _buildInputField(controller: _guardianPhoneController, keyboardType: TextInputType.phone),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: screenHeight * 0.020),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -166,7 +169,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('가입하기', style: TextStyle(fontSize: 18)),
+                  child: Text('가입하기', style: TextStyle(fontSize: screenWidth * 0.050)),
                 ),
               ),
             ],
@@ -177,8 +180,9 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildLabel(String text) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Text(text,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      style: TextStyle(fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
     );
   }
 
@@ -187,6 +191,7 @@ class _SignUpPageState extends State<SignUpPage> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
@@ -201,7 +206,7 @@ class _SignUpPageState extends State<SignUpPage> {
           contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           isDense: true,
         ),
-        style: const TextStyle(fontSize: 18),
+        style: TextStyle(fontSize: screenWidth * 0.050),
       ),
     );
   }

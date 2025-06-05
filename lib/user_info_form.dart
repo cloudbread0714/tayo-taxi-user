@@ -38,11 +38,14 @@ class _MyInfoPageState extends State<MyInfoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('내 정보', style: TextStyle(fontSize: 20)),
+        title: Text('내 정보', style: TextStyle(fontSize: screenWidth * 0.056)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -57,17 +60,17 @@ class _MyInfoPageState extends State<MyInfoPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildLabel('아이디'),
-            const SizedBox(height: 8),
+            SizedBox(height: screenHeight * 0.010),
             _buildReadOnlyField(_email),
 
-            const SizedBox(height: 24),
+            SizedBox(height: screenHeight * 0.030),
             _buildLabel('이름'),
-            const SizedBox(height: 8),
+            SizedBox(height: screenHeight * 0.010),
             _buildReadOnlyField(_name),
 
-            const SizedBox(height: 24),
+            SizedBox(height: screenHeight * 0.030),
             _buildLabel('전화번호'),
-            const SizedBox(height: 8),
+            SizedBox(height: screenHeight * 0.010),
             Row(
               children: [
                 Expanded(
@@ -79,7 +82,7 @@ class _MyInfoPageState extends State<MyInfoPage> {
                 ElevatedButton.icon(
                   onPressed: () async {
                     if (_isEditingPhone) {
-                      // 방금 수정 완료 눌렀을 때 DB에 저장
+                      // 수정 완료 눌렀을 때 DB에 저장
                       final newPhone = _phoneController.text.trim();
                       try {
                         await FirebaseFirestore.instance
@@ -104,7 +107,7 @@ class _MyInfoPageState extends State<MyInfoPage> {
                   },
                   icon: Icon(_isEditingPhone ? Icons.check : Icons.edit, size: 20),
                   label: Text(_isEditingPhone ? '완료' : '수정하기',
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: screenWidth * 0.044),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade100,
@@ -124,12 +127,14 @@ class _MyInfoPageState extends State<MyInfoPage> {
   }
 
   Widget _buildLabel(String text) {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Text(text,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      style: TextStyle(fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildReadOnlyField(String text) {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -137,11 +142,12 @@ class _MyInfoPageState extends State<MyInfoPage> {
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 18)),
+      child: Text(text, style: TextStyle(fontSize: screenWidth * 0.050)),
     );
   }
 
   Widget _buildPhoneField() {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
@@ -150,7 +156,7 @@ class _MyInfoPageState extends State<MyInfoPage> {
       child: TextField(
         controller: _phoneController,
         keyboardType: TextInputType.phone,
-        style: const TextStyle(fontSize: 18),
+        style: TextStyle(fontSize: screenWidth * 0.050),
         decoration: const InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),

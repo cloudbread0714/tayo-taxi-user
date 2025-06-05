@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'location_page.dart';
+import 'destination_input_page.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class ArrivedDestinationPage extends StatelessWidget {
   const ArrivedDestinationPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -15,25 +19,29 @@ class ArrivedDestinationPage extends StatelessWidget {
             children: [
               const Spacer(),
 
-              Text(
+              AutoSizeText(
                 '목적지에 도착했습니다',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: screenWidth * 0.078,
                   fontWeight: FontWeight.bold,
                   color: Colors.green.shade700,
                 ),
+                maxLines: 1,
+                minFontSize: 12,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: screenHeight * 0.020),
 
-              Text(
+              AutoSizeText(
                 '기사님에게 결제를 하십시오',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: screenWidth * 0.061,
                   fontWeight: FontWeight.normal,
                   color: Colors.black87,
                 ),
+                maxLines: 1,
+                minFontSize: 12,
               ),
 
               const Spacer(),
@@ -52,7 +60,7 @@ class ArrivedDestinationPage extends StatelessWidget {
                     backgroundColor: Colors.green.shade200,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textStyle: TextStyle(fontSize: screenWidth * 0.056, fontWeight: FontWeight.bold),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

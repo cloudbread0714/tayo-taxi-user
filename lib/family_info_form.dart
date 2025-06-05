@@ -64,11 +64,14 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('보호자 정보', style: TextStyle(fontSize: 20)),
+        title: Text('보호자 정보', style: TextStyle(fontSize: screenWidth * 0.056)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -84,7 +87,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
           children: [
             // 이름
             _buildLabel('보호자 이름'),
-            const SizedBox(height: 8),
+            SizedBox(height: screenHeight * 0.010),
             _buildFieldWithButton(
               isEditing: _editingName,
               controller: _nameCtrl,
@@ -99,10 +102,10 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
               },
             ),
 
-            const SizedBox(height: 24),
+            SizedBox(height: screenHeight * 0.030),
             // 전화번호
             _buildLabel('보호자 전화번호'),
-            const SizedBox(height: 8),
+            SizedBox(height: screenHeight * 0.010),
             _buildFieldWithButton(
               isEditing: _editingPhone,
               controller: _phoneCtrl,
@@ -124,8 +127,9 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
   }
 
   Widget _buildLabel(String text) {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Text(text,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      style: TextStyle(fontSize: screenWidth * 0.050, fontWeight: FontWeight.bold),
     );
   }
 
@@ -136,6 +140,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
     required VoidCallback onToggle,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Row(
       children: [
         Expanded(
@@ -148,7 +153,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
           onPressed: onToggle,
           icon: Icon(isEditing ? Icons.check : Icons.edit, size: 20),
           label: Text(isEditing ? '완료' : '수정하기',
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: screenWidth * 0.044),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green.shade100,
@@ -164,17 +169,19 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
   }
 
   Widget _buildReadOnlyField(String text) {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 18)),
+      child: Text(text, style: TextStyle(fontSize: screenWidth * 0.050)),
     );
   }
 
   Widget _buildEditableField(TextEditingController ctrl, TextInputType type) {
+    final double screenWidth  = MediaQuery.of(context).size.width;
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
@@ -183,7 +190,7 @@ class _FamilyInfoPageState extends State<FamilyInfoPage> {
       child: TextField(
         controller: ctrl,
         keyboardType: type,
-        style: const TextStyle(fontSize: 18),
+        style: TextStyle(fontSize: screenWidth * 0.050),
         decoration: const InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
