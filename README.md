@@ -12,16 +12,16 @@ https://github.com/cloudbread0714/tayo-taxi-driver
 - 즐겨찾기 기능 
 - Firebase 연동을 통한 인증 및 실시간 데이터 처리
 
-##  기술 스택
+## 기술 스택
 
-### 1) 프레임워크
+1) 프레임워크
 - **Flutter (Dart)**: UI 구현 및 크로스 플랫폼 앱 개발
 
-### 2) 백엔드 / 데이터베이스
+2) 백엔드 / 데이터베이스
 - **Firebase Authentication**: 사용자 인증 처리
 - **Cloud Firestore**: 실시간 데이터베이스 연동
 
-### 3) 위치 / 지도 API
+3) 위치 / 지도 API
 - **Google Maps API**
   - 승객 앱: 목적지 자동완성, 위도·경도 변환
   - 기사 앱: 목적지 지도 앱 연동
@@ -32,7 +32,7 @@ https://github.com/cloudbread0714/tayo-taxi-driver
 - **Geolocator 패키지**
   - 기사 및 승객의 현재 위치 조회
 
-### 4) 디자인
+4) 디자인
 - **Flutter 기본 위젯 활용**
   - 가독성을 고려한 글자 크기 설정 및 padding 확보
 
