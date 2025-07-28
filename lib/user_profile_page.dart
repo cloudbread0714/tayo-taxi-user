@@ -22,7 +22,7 @@ class MyPage extends StatelessWidget {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const LocationPage()),
+              MaterialPageRoute(builder: (_) => const DestinationInputPage()),
             );
           },
         ),

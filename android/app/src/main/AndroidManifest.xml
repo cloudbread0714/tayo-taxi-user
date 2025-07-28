@@ -4,18 +4,19 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:label="TayoTaxi"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:hardwareAccelerated="true">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize"
-            android:hardwareAccelerated="true">
+            android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -23,7 +24,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 네이버 지도용 클라이언트 ID -->
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="@string/naver_client_id" />
