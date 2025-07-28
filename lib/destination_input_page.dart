@@ -8,6 +8,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
 
 import 'package:app_tayo_taxi/pickup_place_list_page.dart';
 import 'user_profile_page.dart';
@@ -15,24 +17,69 @@ import 'bookmark_places_page.dart';
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
 
-class LocationPage extends StatefulWidget {
-  const LocationPage({super.key});
+class DestinationInputPage extends StatefulWidget {
+  const DestinationInputPage({super.key});
 
   @override
-  State<LocationPage> createState() => _LocationPageState();
+  State<DestinationInputPage> createState() => _LocationPageState();
 }
 
-class _LocationPageState extends State<LocationPage> {
+class _LocationPageState extends State<DestinationInputPage> {
   String currentAddress = '출발지를 불러오는 중...';
   latlng.LatLng? currentLatLng;
   latlng.LatLng? destinationLatLng;
   final TextEditingController destinationController = TextEditingController();
   List<String> suggestions = [];
 
+  late stt.SpeechToText _speech;
+  late FlutterTts _flutterTts;
+  bool _isListening = false;
+
+  @override
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _speech = stt.SpeechToText();
+    _flutterTts = FlutterTts();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startVoiceInteraction());
+  }
+
+  Future<void> _startVoiceInteraction() async {
+    await _flutterTts.setLanguage("ko-KR");
+    await _flutterTts.speak("어딜 가실 건가요?");
+    await Future.delayed(const Duration(seconds: 2));
+
+    bool available = await _speech.initialize(
+      onStatus: (status) => print("음성 상태: $status"),
+      onError: (error) => print("음성 오류: $error"),
+    );
+
+    if (available) {
+      await _speech.listen(
+        localeId: "ko_KR",
+        listenMode: stt.ListenMode.dictation,
+        onResult: (result) async {
+          if (result.recognizedWords.isNotEmpty) {
+            final spokenText = result.recognizedWords;
+            print("인식된 텍스트: $spokenText");
+
+            setState(() {
+              destinationController.text = spokenText;
+            });
+
+            await _fetchPlaceSuggestions(spokenText);
+
+            await _flutterTts.speak(
+                "$spokenText 가 입력되었어요. 정확한 위치를 리스트에서 선택해주세요.");
+
+            await _speech.stop();
+          }
+        },
+      );
+    } else {
+      await _flutterTts.speak("음성 인식을 사용할 수 없습니다.");
+    }
   }
 
   Future<void> _goHomeAndNavigate() async {
@@ -59,7 +106,6 @@ class _LocationPageState extends State<LocationPage> {
     final homeLng = data['lng'] as double;
     final homeName = data['placeName'] as String;
 
-    // 바로 내비게이션 페이지로 이동
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -71,7 +117,6 @@ class _LocationPageState extends State<LocationPage> {
       ),
     );
   }
-
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -159,6 +204,7 @@ class _LocationPageState extends State<LocationPage> {
       setState(() => destinationLatLng = null);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +342,7 @@ class _LocationPageState extends State<LocationPage> {
                                   borderRadius: BorderRadius.circular(12)),
                             ),
                             child: const AutoSizeText(
-                                '즐겨찾기', maxLines: 1, minFontSize: 14,),
+                              '즐겨찾기', maxLines: 1, minFontSize: 14,),
                           ),
                           ElevatedButton(
                             onPressed: _goHomeAndNavigate,
@@ -315,7 +361,7 @@ class _LocationPageState extends State<LocationPage> {
                                     borderRadius:
                                     BorderRadius.circular(12))),
                             child: const AutoSizeText(
-                                '집으로', maxLines: 1, minFontSize: 14,),
+                              '집으로', maxLines: 1, minFontSize: 14,),
                           ),
                         ],
                       ),

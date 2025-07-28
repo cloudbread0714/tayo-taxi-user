@@ -48,7 +48,7 @@ class _RideInProgressPageState extends State<RideInProgressPage> {
             if (mounted) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const LocationPage()),
+                MaterialPageRoute(builder: (_) => const DestinationInputPage()),
               );
             }
           });
@@ -388,7 +388,7 @@ class _RideInProgressPageState extends State<RideInProgressPage> {
                     SizedBox(height: screenHeight * 0.03),
 
                     AutoSizeText(
-                      '예상 도착 시간',
+                      '',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: screenWidth * 0.064,
@@ -401,7 +401,7 @@ class _RideInProgressPageState extends State<RideInProgressPage> {
                     ),
                     SizedBox(height: screenHeight * 0.01),
                     AutoSizeText(
-                      arrivalText,
+                      '',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: screenWidth * 0.064,

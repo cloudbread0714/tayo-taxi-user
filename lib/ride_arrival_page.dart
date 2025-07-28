@@ -53,7 +53,7 @@ class ArrivedDestinationPage extends StatelessWidget {
                     // LocationPage로 이동
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const LocationPage()),
+                      MaterialPageRoute(builder: (_) => const DestinationInputPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

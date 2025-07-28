@@ -55,7 +55,7 @@ class PassengerWaitingPage extends StatelessWidget {
           }
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const LocationPage()),
+            MaterialPageRoute(builder: (_) => const DestinationInputPage()),
                 (route) => false,
           );
         }

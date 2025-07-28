@@ -10,6 +10,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+//LoginPage 설정
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -27,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
       Future.microtask(() {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LocationPage()),
+          MaterialPageRoute(builder: (_) => const DestinationInputPage()),
         );
       });
     }
@@ -46,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
       // 로그인 성공 시 LocationPage로 이동
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LocationPage()),
+        MaterialPageRoute(builder: (_) => const DestinationInputPage()),
       );
     } on FirebaseAuthException catch (e) {
       showDialog(

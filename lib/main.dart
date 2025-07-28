@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart'; // Naver 지도 SDK
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 import 'firebase_options.dart';
 import 'user_login_page.dart';
@@ -9,10 +9,6 @@ import 'user_login_page.dart';
 Future<void> main() async {
   // Flutter 엔진 초기화
   WidgetsFlutterBinding.ensureInitialized();
-
-  // .env 파일 로드 (.env 파일은 프로젝트 루트에 위치해야 함)
-  // 예시 내용:
-  // NAVER_CLIENT_ID=YOUR_ACTUAL_CLIENT_ID_HERE
   await dotenv.load(fileName: ".env");
 
   // Firebase 초기화
@@ -20,7 +16,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 🔐 Naver Map SDK 초기화 (clientId는 .env 파일에서 로드)
+  //  Naver Map SDK 초기화 (clientId는 .env 파일에서 로드)
   final naverClientId = dotenv.env['NAVER_CLIENT_ID'];
   if (naverClientId == null || naverClientId.isEmpty) {
     debugPrint('.env 파일에 NAVER_CLIENT_ID가 누락되어 있습니다.');

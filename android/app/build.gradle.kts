@@ -19,9 +19,12 @@ dependencies {
 
 android {
     namespace = "com.example.app_tayo_taxi"
-    compileSdk = flutter.compileSdkVersion
+
+    // ✅ Android SDK 36으로 명시 설정
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
+    // ✅ Java 11 호환성 설정
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -34,14 +37,14 @@ android {
     defaultConfig {
         applicationId = "com.example.app_tayo_taxi"
         minSdk = 23
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36 // ✅ 필수: flutter_naver_map 요구사항
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug") // 필요시 release용 서명 변경 가능
         }
     }
 }
