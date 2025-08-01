@@ -29,6 +29,8 @@ class DestinationInputPage extends StatefulWidget {
 }
 
 bool isListening = false;
+bool waitingForConfirmation = false;
+String? extractedPlaceForConfirmation;
 
 class _DestinationInputPageState extends State<DestinationInputPage> {
   String currentAddress = '출발지를 불러오는 중...';
@@ -45,167 +47,95 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     _getCurrentLocation();
     _speech = stt.SpeechToText();
     _flutterTts = FlutterTts();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _processVoiceWithAI());
+    _flutterTts.setLanguage("ko-KR");
+    _flutterTts.speak("어디로 가고 싶으신가요?"); // 자동 안내
   }
 
   Future<void> _processVoiceWithAI() async {
-    await _flutterTts.setLanguage("ko-KR");
+    if (waitingForConfirmation && extractedPlaceForConfirmation != null) {
+      // ✅ 네/아니요 응답 처리
+      await _handleConfirmationInput();
+    } else {
+      // ✅ 목적지 인식 단계
+      await _handleDestinationInput();
+    }
+  }
+  Future<void> _handleDestinationInput() async {
+    final available = await _speech.initialize();
+    if (!available) {
+      await _speakAndWait("음성 인식을 사용할 수 없습니다.");
+      return;
+    }
+    await Future.delayed(Duration(milliseconds: 300));
 
-    for (int attempt = 0; attempt < 3; attempt++) {
-      await _speakAndWait("어디로 가고 싶으신가요?");
-      await Future.delayed(const Duration(milliseconds: 400));
+    setState(() => isListening = true);
+    final result = await _listenOnce();
+    setState(() => isListening = false);
 
-      final available = await _speech.initialize();
-      if (!available) {
-        await _flutterTts.speak("음성 인식을 사용할 수 없습니다.");
-        return;
-      }
+    if (result.length < 2) {
+      await _speakAndWait("말씀을 인식하지 못했어요. 다시 눌러주세요.");
+      return;
+    }
 
-      await _speech.stop();
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      final speechCompleter = Completer<String>();
-      bool alreadyCompleted = false;
-
-      // 🔵 음성 인식 시작 표시
-      setState(() => isListening = true);
-
-      await _speech.listen(
-        localeId: "ko_KR",
-        listenMode: stt.ListenMode.dictation,
-        onResult: (result) {
-          if (!alreadyCompleted && result.finalResult && result.recognizedWords
-              .trim()
-              .isNotEmpty) {
-            alreadyCompleted = true;
-            speechCompleter.complete(result.recognizedWords.trim());
-          }
-        },
-      );
-
-      final userSpeech = await speechCompleter.future.timeout(
-        const Duration(seconds: 7),
-        onTimeout: () => '',
-      );
-
-      // 🔴 음성 인식 종료 표시
-      setState(() => isListening = false);
-
-      print("🗣 목적지 음성 입력 결과: '$userSpeech'");
-
-      if (userSpeech.length < 2) {
-        await _speakAndWait("말씀을 인식하지 못했어요. 다시 말씀해주시겠어요?");
-        continue;
-      }
-
-      final userSpeechLower = userSpeech.toLowerCase();
-      final homePatterns = [
-        "집", "집으로", "집에", "우리 집", "집 가고", "집에 가고", "집으로 가고 싶어"
-      ];
-      final isGoingHome = homePatterns.any((phrase) =>
-          userSpeechLower.contains(phrase));
-
-      if (isGoingHome) {
-        final homeData = await _loadHomeBookmark();
-        if (homeData != null) {
-          setState(() {
-            destinationController.text = homeData['placeName'];
-            destinationLatLng = latlng.LatLng(homeData['lat'], homeData['lng']);
-          });
-          await _speakAndWait("집으로 설정했어요. 다음 버튼을 눌러주세요.");
-          return;
-        } else {
-          await _speakAndWait("집 주소가 설정되어 있지 않아요. 즐겨찾기에서 집을 설정해주세요.");
-          continue;
-        }
-      }
-
-      final extractedPlace = await _getPlaceFromGemini(userSpeech);
-      print("📍 추출된 장소: '$extractedPlace'");
-
-      if (extractedPlace == null || extractedPlace
-          .trim()
-          .length < 2) {
-        await _speakAndWait("죄송합니다. 장소를 이해하지 못했어요. 다시 말씀해주세요.");
-        continue;
-      }
-
-      await _speakAndWait("$extractedPlace로 가고 싶으신가요? 네 또는 아니요로 대답해주세요.");
-      await Future.delayed(const Duration(milliseconds: 500));
-      await _speech.stop();
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      final confirmCompleter = Completer<String>();
-      bool confirmCompleted = false;
-
-      // 🔵 확인 음성 인식 시작
-      setState(() => isListening = true);
-
-      await _speech.listen(
-        localeId: "ko_KR",
-        listenMode: stt.ListenMode.confirmation,
-        onResult: (result2) {
-          if (!confirmCompleted && result2.finalResult &&
-              result2.recognizedWords
-                  .trim()
-                  .isNotEmpty) {
-            confirmCompleted = true;
-            confirmCompleter.complete(result2.recognizedWords.trim());
-          }
-        },
-      );
-
-      final confirmation = await confirmCompleter.future.timeout(
-        const Duration(seconds: 6),
-        onTimeout: () => '',
-      );
-
-      // 🔴 확인 음성 인식 종료
-      setState(() => isListening = false);
-
-      final lowerConfirm = confirmation.toLowerCase().replaceAll(
-          RegExp(r'[^\uAC00-\uD7A3a-z0-9]'), '');
-      print("✅ 사용자 확인 응답: '$lowerConfirm'");
-
-      final yesPatterns = ["네", "예", "응", "넵", "그래", "좋아요", "네네", "네에요"];
-      final noPatterns = ["아니요", "아니", "싫어요", "노", "아뇨"];
-
-      final isYes = yesPatterns.any((p) => lowerConfirm.contains(p));
-      final isNo = noPatterns.any((p) => lowerConfirm.contains(p));
-
-      if (isYes) {
-        setState(() {
-          destinationController.text = extractedPlace;
-        });
-        await _fetchPlaceSuggestions(extractedPlace);
-        await _speakAndWait(
-            "$extractedPlace로 설정했어요. 정확한 위치를 선택해주고, 다음 버튼을 눌러주세요.");
-        return;
-      } else if (isNo) {
-        await _speakAndWait("알겠습니다. 다시 여쭤볼게요.");
-        continue;
+    // 집 처리 생략 가능
+    final isGoingHome = ["집", "우리 집", "집에"].any((p) => result.contains(p));
+    if (isGoingHome) {
+      final home = await _loadHomeBookmark();
+      if (home != null) {
+        destinationController.text = home['placeName'];
+        destinationLatLng = latlng.LatLng(home['lat'], home['lng']);
+        await _speakAndWait("집으로 설정했어요. 다음 버튼을 눌러주세요.");
       } else {
-        await _speakAndWait("죄송해요, 네 또는 아니요로 말씀해주세요.");
-        continue;
+        await _speakAndWait("집 주소가 설정되어 있지 않아요.");
       }
+      return;
     }
 
-    await _speakAndWait("죄송합니다. 목적지를 직접 입력해주세요.");
-  }
-
-  Future<void> _speakAndWait(String message) async {
-    await _flutterTts.speak(message);
-    bool isSpeaking = true;
-    _flutterTts.setCompletionHandler(() {
-      isSpeaking = false;
-    });
-
-    // 최대 10초까지 대기
-    for (int i = 0; i < 100; i++) {
-      if (!isSpeaking) break;
-      await Future.delayed(Duration(milliseconds: 100));
+    final extracted = await _getPlaceFromGemini(result);
+    if (extracted == null || extracted.length < 2) {
+      await _speakAndWait("죄송합니다. 장소를 이해하지 못했어요.");
+      return;
     }
+
+    // 👉 다음 클릭 시 네/아니요로 넘어가게 준비
+    extractedPlaceForConfirmation = extracted;
+    waitingForConfirmation = true;
+    await _speakAndWait("$extracted 로 가고 싶으신가요? 네 또는 아니요로 대답해주세요.");
   }
+
+  Future<void> _handleConfirmationInput() async {
+    final available = await _speech.initialize();
+    if (!available) {
+      await _speakAndWait("음성 인식을 사용할 수 없습니다.");
+      return;
+    }
+
+    await Future.delayed(Duration(milliseconds: 300));
+
+    setState(() => isListening = true);
+    final result = await _listenOnce();
+    setState(() => isListening = false);
+
+    final answer = result.toLowerCase().replaceAll(RegExp(r'[^\uAC00-\uD7A3a-z0-9]'), '');
+    final yes = ["네", "예", "응", "그래", "좋아"].any((e) => answer.contains(e));
+    final no = ["아니", "노", "싫"].any((e) => answer.contains(e));
+
+    if (yes) {
+      destinationController.text = extractedPlaceForConfirmation!;
+      await _fetchPlaceSuggestions(extractedPlaceForConfirmation!);
+      await _speakAndWait("${extractedPlaceForConfirmation!}로 설정했어요.");
+    } else if (no) {
+      await _speakAndWait("알겠습니다. 다시 말씀해주세요.");
+    } else {
+      await _speakAndWait("죄송해요. 네 또는 아니요로 말씀해주세요.");
+      return;
+    }
+
+    // 초기화
+    waitingForConfirmation = false;
+    extractedPlaceForConfirmation = null;
+  }
+
 
   Future<String?> _getPlaceFromGemini(String inputText) async {
     final response = await http.post(
@@ -326,6 +256,41 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     } else {
       return null;
     }
+  }
+
+  Future<void> _speakAndWait(String message) async {
+    await _flutterTts.speak(message);
+
+    bool isSpeaking = true;
+    _flutterTts.setCompletionHandler(() {
+      isSpeaking = false;
+    });
+
+    for (int i = 0; i < 100; i++) {
+      if (!isSpeaking) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  Future<String> _listenOnce() async {
+    final completer = Completer<String>();
+    bool gotResult = false;
+
+    await _speech.listen(
+      localeId: "ko_KR",
+      listenMode: stt.ListenMode.dictation,
+      onResult: (result) {
+        if (!gotResult && result.finalResult && result.recognizedWords.isNotEmpty) {
+          gotResult = true;
+          completer.complete(result.recognizedWords.trim());
+        }
+      },
+    );
+
+    return completer.future.timeout(
+      const Duration(seconds: 6),
+      onTimeout: () => '',
+    );
   }
 
   Future<void> _convertAddressToLatLng(String address) async {
@@ -565,26 +530,29 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
               right: 0,
               child: Center(
                 child: AvatarGlow(
-                  glowColor: Colors.green,
-                  endRadius: 50.0,
-                  animate: isListening,
-                  duration: const Duration(milliseconds: 2000),
-                  repeatPauseDuration: const Duration(milliseconds: 100),
-                  repeat: true,
-                  child: Material(
-                    elevation: 4.0,
-                    shape: const CircleBorder(),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.green.shade100,
-                      radius: 28.0,
-                      child: Icon(
-                        Icons.mic,
-                        size: 28.0,
-                        color: isListening ? Colors.green.shade900 : Colors
-                            .grey,
-                      ),
-                    ),
-                  ),
+    glowColor: Colors.green,
+    endRadius: 50.0,
+    animate: isListening,
+    duration: const Duration(milliseconds: 2000),
+    repeatPauseDuration: const Duration(milliseconds: 100),
+    repeat: true,
+    child: Material(
+    elevation: 4.0,
+    shape: const CircleBorder(),
+    child: InkWell(
+    onTap: _processVoiceWithAI, // 버튼 클릭 시 음성 인식 시작
+    customBorder: const CircleBorder(),
+    child: CircleAvatar(
+    backgroundColor: Colors.green.shade100,
+    radius: 28.0,
+    child: Icon(
+    Icons.mic,
+    size: 28.0,
+    color: isListening ? Colors.green.shade900 : Colors.grey,
+    ),
+    ),
+    ),
+    ),
                 ),
               ),
             ),
