@@ -26,6 +26,7 @@ dependencies:
   google_maps_flutter: ^2.5.0
   speech_to_text: ^7.2.0  # 최신 버전 확인 필요
   flutter_tts: ^4.0.2
+  avatar_glow: ^2.0.2
 
 
 dev_dependencies:
