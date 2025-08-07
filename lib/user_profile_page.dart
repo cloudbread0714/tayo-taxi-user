@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'destination_input_page.dart';
 import 'user_login_page.dart';
 import 'user_info_form.dart';
@@ -22,7 +23,7 @@ class MyPage extends StatelessWidget {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const LocationPage()),
+              MaterialPageRoute(builder: (_) => const DestinationInputPage()),
             );
           },
         ),
@@ -58,6 +59,23 @@ class MyPage extends StatelessWidget {
             SizedBox(height: screenHeight * 0.43),
             ElevatedButton.icon(
               onPressed: () async {
+                // 현재 사용자의 튜토리얼 상태 초기화
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  final prefs = await SharedPreferences.getInstance();
+                  final userId = user.uid;
+                  
+                  // 해당 사용자의 모든 튜토리얼 상태 초기화
+                  await prefs.remove('has_shown_login_tutorial_$userId');
+                  await prefs.remove('has_shown_destination_tutorial_$userId');
+                  await prefs.remove('has_shown_pickup_place_tutorial_$userId');
+                  await prefs.remove('has_shown_bookmark_search_tutorial_$userId');
+                  await prefs.remove('has_shown_bookmark_add_tutorial_$userId');
+                  
+                  // 로그아웃 후 로그인 페이지 튜토리얼 초기화
+                  await prefs.remove('has_shown_login_tutorial_logout');
+                }
+                
                 await FirebaseAuth.instance.signOut(); // Firebase 로그아웃
                 Navigator.pushAndRemoveUntil(
                   context,

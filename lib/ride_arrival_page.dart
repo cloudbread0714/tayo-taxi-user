@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'destination_input_page.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'destination_input_page.dart';
 
-class ArrivedDestinationPage extends StatelessWidget {
+class ArrivedDestinationPage extends StatefulWidget {
   const ArrivedDestinationPage({Key? key}) : super(key: key);
+
+  @override
+  State<ArrivedDestinationPage> createState() => _ArrivedDestinationPageState();
+}
+
+class _ArrivedDestinationPageState extends State<ArrivedDestinationPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +26,7 @@ class ArrivedDestinationPage extends StatelessWidget {
               const Spacer(),
 
               AutoSizeText(
-                '목적지에 도착했습니다',
+                '목적지에 도착했습니다!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: screenWidth * 0.078,
@@ -33,7 +39,7 @@ class ArrivedDestinationPage extends StatelessWidget {
               SizedBox(height: screenHeight * 0.020),
 
               AutoSizeText(
-                '기사님에게 결제를 하십시오',
+                '기사님에게 결제를 해주세요',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: screenWidth * 0.061,
@@ -50,17 +56,19 @@ class ArrivedDestinationPage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // LocationPage로 이동
-                    Navigator.pushReplacement(
+                    Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => const LocationPage()),
+                      MaterialPageRoute(
+                          builder: (_) => const DestinationInputPage()),
+                          (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade200,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    textStyle: TextStyle(fontSize: screenWidth * 0.056, fontWeight: FontWeight.bold),
+                    textStyle: TextStyle(fontSize: screenWidth * 0.056,
+                        fontWeight: FontWeight.bold),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
