@@ -1,16 +1,36 @@
-# app_tayo_taxi
+# 타요택시 사용자앱 (Tayo Taxi User App)
 
-A new Flutter project.
+**타요택시**는 사용자의 현재 위치를 기준으로 목적지를 설정하고, 근처 택시를 호출할 수 있는 Flutter 기반 모바일 애플리케이션입니다. 사용자 친화적인 UI와 실시간 위치 연동 기능을 통해 누구나 쉽게 사용할 수 있도록 설계되었습니다.
 
-## Getting Started
+기사앱 
+https://github.com/cloudbread0714/tayo-taxi-driver
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+##  주요 기능
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- 현재 위치 자동 추적 기능
+- 현재 위치 기반 500m 이내 랜드마크 리스트 제공 후 픽업 위치 선정
+- 즐겨찾기 기능 
+- Firebase 연동을 통한 인증 및 실시간 데이터 처리
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 기술 스택
+
+| 구분                | 기술 / API                   | 설명                                                                 |
+|---------------------|------------------------------|----------------------------------------------------------------------|
+| **프레임워크**       | Flutter (Dart)               | UI 구현 및 크로스 플랫폼 앱 개발                                      |
+| **백엔드 / DB**      | Firebase Authentication      | 사용자 인증 처리                                                     |
+|                     | Cloud Firestore              | 실시간 데이터베이스 연동                                             |
+| **위치 / 지도 API** | Google Maps API              | - 승객 앱: 목적지 자동완성, 위도·경도 변환<br>- 기사 앱: 목적지 지도 앱 연동 |
+|                     | Tmap API                     | 500m 이내 약국, 편의점, 주민센터, 학교 정문 등 픽업 위치 리스트 생성   |
+|                     | Naver Map SDK                | 픽업 위치 지도 시각화                                                |
+|                     | Geolocator 패키지            | 기사 및 승객의 현재 위치 조회                                        |
+## 플로우 차트 
+![플로우차트](images/기능_흐름도.png)
+
+## 개발 팀원 
+
+| 이름       | 역할               | 주요 담당 업무                                                                 |
+|------------|--------------------|--------------------------------------------------------------------------------|
+| 서정우     | 팀장 / 프론트엔드  | - 전체 UI 디자인 및 화면 레이아웃 설계<br>- 즐겨찾기 기능 및 이용 내역 구현<br>- 프로젝트 보고서 초안 작성 및 수정 |
+| 강유진     | 팀원 / 백엔드       | - API 및 DB 연동<br>- 로그인/회원가입, 랜드마크 기반 위치 탐색 기능 구현<br>- 프로젝트 보고서 초안 작성 및 수정 |
