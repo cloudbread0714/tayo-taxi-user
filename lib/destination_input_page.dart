@@ -38,7 +38,7 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
   latlng.LatLng? currentLatLng;
   latlng.LatLng? destinationLatLng;
   final TextEditingController destinationController = TextEditingController();
-  List<String> suggestions = [];
+  List<Map<String, dynamic>> suggestions = <Map<String, dynamic>>[];
   late stt.SpeechToText _speech;
   late FlutterTts _flutterTts;
   late TutorialCoachMark tutorialCoachMark;
@@ -190,7 +190,7 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     
     final response = await http.post(
       Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$kGeminiApiKey'),
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$kGeminiApiKey'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -264,35 +264,51 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
   }
 
   Future<void> _fetchPlaceSuggestions(String input) async {
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&key=$kGoogleApiKey&language=ko&components=country:kr';
+    if (input.isEmpty) {
+      setState(() => suggestions = <Map<String, dynamic>>[]);
+      return;
+    }
+
+    final url = Uri.https(
+      'maps.googleapis.com',
+      '/maps/api/place/autocomplete/json',
+      {
+        'input': input,
+        'key': kGoogleApiKey,
+        'language': 'ko',
+        'components': 'country:kr',
+      },
+    );
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final predictions = data['predictions'] as List;
-        final suggestionsList = predictions.map((p) => p['description'] as String).toList();
-        
+        final preds = data['predictions'] as List;
+
         setState(() {
-          suggestions = suggestionsList;
+          suggestions = preds.map((p) {
+            final fmt = p['structured_formatting'];
+            return {
+              'placeId': p['place_id'],
+              'placeName': fmt['main_text'],
+              'address': fmt['secondary_text'],
+            };
+          }).toList();
         });
-        
-        // 첫 번째 항목이 있으면 자동으로 선택
-        if (suggestionsList.isNotEmpty) {
-          await _selectSuggestion(suggestionsList.first);
-        }
       } else {
-        setState(() => suggestions = []);
+        setState(() => suggestions = <Map<String, dynamic>>[]);
       }
     } catch (e) {
-      setState(() => suggestions = []);
+      setState(() => suggestions = <Map<String, dynamic>>[]);
     }
   }
 
-  Future<void> _selectSuggestion(String suggestion) async {
-    destinationController.text = suggestion;
-    await _convertAddressToLatLng(suggestion);
+  Future<void> _selectSuggestion(Map<String, dynamic> suggestion) async {
+    destinationController.text = suggestion['placeName'];
+    await _convertAddressToLatLng(
+      "${suggestion['address']} ${suggestion['placeName']}",
+    );
     setState(() => suggestions.clear());
   }
 
@@ -591,9 +607,14 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
                       SizedBox(height: screenHeight * 0.013),
                       ...suggestions.map((s) =>
                           ListTile(
-                            title: Text(s),
+                            title: Text(
+                              s['placeName'],
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(s['address'] ?? ''),
                             onTap: () => _selectSuggestion(s),
-                          )),
+                          ),
+                      ),
                       SizedBox(height: screenHeight * 0.025),
                       ElevatedButton(
                         key: nextButtonKey,
