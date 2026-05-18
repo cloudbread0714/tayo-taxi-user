@@ -4,10 +4,15 @@
 
 기사앱 
 https://github.com/cloudbread0714/tayo-taxi-driver
+
 시연 영상
 https://youtu.be/pYU5oNMgiQQ?si=xmQ5jrM2EiK5WbeH
+
 프로젝트 결과 보고서
 https://drive.google.com/file/d/1SxxlAXgifYRs_sXItSpnpE-NUcDtNV0-/view?usp=sharing
+
+포스터
+https://drive.google.com/file/d/1iVm17tb6OHeE9HYIrYar-zsOKp1XLwdO/view?usp=sharing
 
 ---
 
@@ -31,9 +36,6 @@ https://drive.google.com/file/d/1SxxlAXgifYRs_sXItSpnpE-NUcDtNV0-/view?usp=shari
 |                     | Geolocator 패키지            | 기사 및 승객의 현재 위치 조회                                        |
 ## 플로우 차트 
 ![플로우차트](images/기능_흐름도.png)
-
-## 포스터
-![포스터](images/타요택시_포스터.png)
 
 ## 개발 팀원 
 
