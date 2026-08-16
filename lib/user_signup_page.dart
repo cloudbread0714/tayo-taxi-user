@@ -18,6 +18,17 @@ class _SignUpPageState extends State<SignUpPage> {
   final _guardianNameController = TextEditingController();    // 보호자 이름
   final _guardianPhoneController = TextEditingController();   // 보호자 전화번호
 
+  @override
+  void dispose() {
+    _idController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _guardianNameController.dispose();
+    _guardianPhoneController.dispose();
+    super.dispose();
+  }
+
   void _signUp() async {
     final id            = _idController.text.trim();
     final pw            = _passwordController.text.trim();

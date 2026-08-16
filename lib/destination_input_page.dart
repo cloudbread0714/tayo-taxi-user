@@ -17,9 +17,9 @@ import 'package:avatar_glow/avatar_glow.dart'; // 추가된 패키지
 import 'package:app_tayo_taxi/pickup_place_list_page.dart';
 import 'user_profile_page.dart';
 import 'bookmark_places_page.dart';
+import 'services/extract_place.dart';
 
 final String kGoogleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
-final String kGeminiApiKey = dotenv.env['GOOGLE_GEMINI_API_KEY'] ?? '';
 
 class DestinationInputPage extends StatefulWidget {
   const DestinationInputPage({super.key});
@@ -91,7 +91,7 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
       return;
     }
 
-    final extracted = await _getPlaceFromGemini(result);
+    final extracted = await extractPlaceName(result);
     if (extracted == null || extracted.length < 2) {
       await _speakAndWait("죄송합니다. 장소를 이해하지 못했어요.");
       return;
@@ -134,40 +134,6 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     // 초기화
     waitingForConfirmation = false;
     extractedPlaceForConfirmation = null;
-  }
-
-
-  Future<String?> _getPlaceFromGemini(String inputText) async {
-    final response = await http.post(
-      Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$kGeminiApiKey'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        "contents": [
-          {
-            "parts": [
-              {
-                "text": "다음 문장에서 한국어 장소명만 추출해 주세요. 장소가 없으면 'NONE'이라고만 말해주세요: '$inputText'"
-              }
-            ]
-          }
-        ]
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
-      final text = json['candidates'][0]['content']['parts'][0]['text'] as String;
-      final cleaned = text
-          .replaceAll('\n', '')
-          .trim();
-      return cleaned.toLowerCase() == 'none' ? null : cleaned;
-    } else {
-      print("❌ Gemini 호출 실패: ${response.body}");
-      return null;
-    }
   }
 
 

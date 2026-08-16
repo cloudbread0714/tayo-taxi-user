@@ -9,7 +9,8 @@
     <application
         android:label="TayoTaxi"
         android:icon="@mipmap/ic_launcher"
-        android:hardwareAccelerated="true">
+        android:hardwareAccelerated="true"
+        android:allowBackup="false">
 
         <activity
             android:name=".MainActivity"

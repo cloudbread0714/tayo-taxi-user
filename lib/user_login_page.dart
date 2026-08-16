@@ -21,6 +21,13 @@ class _LoginPageState extends State<LoginPage> {
     _checkLoginStatus(); // 앱 시작 시 자동 로그인 확인
   }
 
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   void _checkLoginStatus() {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
