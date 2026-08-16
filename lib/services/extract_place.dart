@@ -1,28 +1,50 @@
-import 'package:cloud_functions/cloud_functions.dart';
+import 'dart:convert';
 
-const _functionsRegion = 'asia-northeast3';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 
-/// Extracts a Korean place name from speech text via Cloud Functions.
-/// The Gemini key stays on the server.
+/// Picks a Korean place name from speech text using Places Autocomplete.
+/// Uses GOOGLE_API_KEY from local .env. No billed LLM key.
 Future<String?> extractPlaceName(String inputText) async {
-  final callable = FirebaseFunctions.instanceFor(region: _functionsRegion)
-      .httpsCallable('extractPlaceName');
+  final apiKey = dotenv.env['GOOGLE_API_KEY'];
+  if (apiKey == null || apiKey.isEmpty) return null;
+
+  final uri = Uri.https(
+    'maps.googleapis.com',
+    '/maps/api/place/autocomplete/json',
+    {
+      'input': inputText,
+      'key': apiKey,
+      'language': 'ko',
+      'components': 'country:kr',
+    },
+  );
 
   try {
-    final result = await callable.call(<String, dynamic>{
-      'inputText': inputText,
-    });
-    final data = result.data;
-    if (data is! Map) return null;
-    final place = data['place'];
-    if (place is! String) return null;
+    final response = await http.get(uri);
+    if (response.statusCode != 200) return null;
 
-    final cleaned = place.replaceAll('\n', '').trim();
-    if (cleaned.isEmpty || cleaned.toLowerCase() == 'none') {
-      return null;
+    final data = jsonDecode(response.body);
+    if (data is! Map) return null;
+
+    final predictions = data['predictions'];
+    if (predictions is! List || predictions.isEmpty) return null;
+
+    final first = predictions.first;
+    if (first is! Map) return null;
+
+    final structured = first['structured_formatting'];
+    if (structured is Map && structured['main_text'] is String) {
+      final name = (structured['main_text'] as String).trim();
+      if (name.isNotEmpty) return name;
     }
-    return cleaned;
-  } on FirebaseFunctionsException {
+
+    final description = first['description'];
+    if (description is String && description.trim().isNotEmpty) {
+      return description.trim();
+    }
+    return null;
+  } catch (_) {
     return null;
   }
 }
