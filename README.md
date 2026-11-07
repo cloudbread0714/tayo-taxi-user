@@ -10,12 +10,12 @@
 
 | 구분 | 자료 |
 |------|------|
-| 프로젝트 결과물 (소스 코드) | 이 저장소 (`lib/`, `android/`, `ios/`) |
+| 프로젝트 결과물 (소스 코드) | 이 저장소 |
 | 기사 앱 소스 코드 | [tayo-taxi-driver](https://github.com/cloudbread0714/tayo-taxi-driver) |
 | 개발 문서 | 이 README, [기능 흐름도](images/기능_흐름도.png) |
-| 발표자료 PDF | [docs/타요택시_발표자료.pdf](docs/타요택시_발표자료.pdf) |
-| 포스터 PDF | [docs/타요택시_포스터.pdf](docs/타요택시_포스터.pdf) |
-| 프로젝트 결과보고서 PDF | [docs/타요택시_결과보고서.pdf](docs/타요택시_결과보고서.pdf) |
+| 발표자료 PDF | [docs/presentation.pdf](docs/presentation.pdf) |
+| 포스터 PDF | [docs/poster.pdf](docs/poster.pdf) |
+| 프로젝트 결과보고서 PDF | [docs/final-report.pdf](docs/final-report.pdf) |
 | 시연 영상 | [YouTube Shorts](https://www.youtube.com/shorts/5BCnoYH2l_A) |
 
 시연 영상 직접 링크: https://www.youtube.com/shorts/5BCnoYH2l_A
