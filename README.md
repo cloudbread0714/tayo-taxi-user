@@ -31,8 +31,6 @@
 <p align="center">
   <a href="docs/poster.pdf">포스터 PDF 보기</a>
   &nbsp;·&nbsp;
-  <a href="docs/presentation.pdf">발표자료 PDF</a>
-  &nbsp;·&nbsp;
   <a href="docs/final-report.pdf">결과보고서 PDF</a>
 </p>
 
@@ -68,10 +66,6 @@
 </p>
 
 ## 개발 팀원
-
-<p align="center">
-  <img src="images/팀원.png" alt="개발 팀원" width="480"/>
-</p>
 
 | 이름 | 역할 | 주요 담당 업무 |
 |------|------|----------------|
