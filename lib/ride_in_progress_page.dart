@@ -385,33 +385,9 @@ class _RideInProgressPageState extends State<RideInProgressPage> {
                       minFontSize: 14,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: screenHeight * 0.03),
 
-                    AutoSizeText(
-                      '',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.064,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      maxLines: 1,
-                      minFontSize: 14,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                     SizedBox(height: screenHeight * 0.01),
-                    AutoSizeText(
-                      '',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.064,
-                        fontWeight: FontWeight.normal,
-                        color: Colors.black,
-                      ),
-                      maxLines: 1,
-                      minFontSize: 14,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+
                   ],
                 ),
               ),

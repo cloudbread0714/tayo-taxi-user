@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BookmarkPlacesPage extends StatefulWidget {
   const BookmarkPlacesPage({Key? key}) : super(key: key);
@@ -20,6 +22,14 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
   final String _apiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
   bool _isHomeMode = false;
   Map<String, dynamic>? _home;
+  
+  // 튜토리얼 관련 변수들
+  final GlobalKey searchFieldKey = GlobalKey();
+  final GlobalKey firstAddButtonKey = GlobalKey();
+  late TutorialCoachMark tutorialCoachMark;
+  List<TargetFocus> targets = [];
+  bool _hasShownSearchTutorial = false;
+  bool _hasShownAddTutorial = false;
 
   @override
   void initState() {
@@ -32,6 +42,11 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
     _loadHome();
     _searchController.addListener(() {
       _onSearchChanged(_searchController.text);
+    });
+    
+    // 위젯이 완전히 빌드된 후 첫 번째 튜토리얼 시작 (로그인 후 1회만)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowSearchTutorial(context);
     });
   }
 
@@ -78,6 +93,17 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
           };
         }).toList();
       });
+      
+      // 검색 결과가 나타나면 두 번째 튜토리얼 시작 (로그인 후 1회만)
+      if (suggestions.isNotEmpty && !_hasShownAddTutorial) {
+        _hasShownAddTutorial = true;
+        // 약간의 지연시간 추가 (1초)
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            _checkAndShowAddButtonTutorial(context);
+          }
+        });
+      }
     }
   }
 
@@ -126,6 +152,135 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
 
   Future<void> _deleteBookmark(String docId) async =>
       await _bookmarksRef.doc(docId).delete();
+
+  void _showSearchTutorial(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    targets.clear();
+    targets.addAll([
+      TargetFocus(
+        identify: "search_field",
+        keyTarget: searchFieldKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "자주 가는 장소를 검색해주세요",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.05,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  "칸을 터치하세요",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.035,
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    ]);
+
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        _hasShownSearchTutorial = true;
+      },
+      onClickTarget: (target) {
+        tutorialCoachMark.next();
+        return true;
+      },
+      onClickOverlay: (target) {
+        tutorialCoachMark.next();
+        return true;
+      },
+      onSkip: () {
+        _hasShownSearchTutorial = true;
+        return true;
+      },
+      hideSkip: true,
+    );
+
+    tutorialCoachMark.show(context: context);
+  }
+
+  void _showAddButtonTutorial(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    targets.clear();
+    targets.addAll([
+      TargetFocus(
+        identify: "add_button",
+        keyTarget: firstAddButtonKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "버튼을 눌러 즐겨찾기 추가를 할 수 있어요",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.05,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  "버튼을 터치하세요",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.035,
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    ]);
+
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {},
+      onClickTarget: (target) {
+        tutorialCoachMark.next();
+        return true;
+      },
+      onClickOverlay: (target) {
+        tutorialCoachMark.next();
+        return true;
+      },
+      onSkip: () {
+        return true;
+      },
+      hideSkip: true,
+    );
+
+    tutorialCoachMark.show(context: context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +342,7 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
             SizedBox(height: screenHeight * 0.020),
             // 검색창
             TextField(
+              key: searchFieldKey,
               controller: _searchController,
               decoration: InputDecoration(
                 prefixIcon: Icon(
@@ -307,6 +463,7 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
                               subtitle: Text(s['address'],
                                   style: TextStyle(fontSize: screenWidth * 0.039)),
                               trailing: ElevatedButton(
+                                key: i == 0 ? firstAddButtonKey : null, // 첫 번째 아이템에만 GlobalKey 추가
                                 onPressed: () => _addBookmark(s,
                                     isHome: _isHomeMode),
                                 style: ElevatedButton.styleFrom(
@@ -329,6 +486,38 @@ class _BookmarkPlacesPageState extends State<BookmarkPlacesPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndShowSearchTutorial(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'unknown';
+    final key = 'has_shown_bookmark_search_tutorial_$userId';
+    final hasShownTutorial = prefs.getBool(key) ?? false;
+    
+    if (!hasShownTutorial) {
+      await prefs.setBool(key, true);
+      _showSearchTutorial(context);
+    }
+  }
+
+  Future<void> _checkAndShowAddButtonTutorial(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'unknown';
+    final key = 'has_shown_bookmark_add_tutorial_$userId';
+    final hasShownTutorial = prefs.getBool(key) ?? false;
+    
+    if (!hasShownTutorial) {
+      await prefs.setBool(key, true);
+      _showAddButtonTutorial(context);
+    }
   }
 }
 

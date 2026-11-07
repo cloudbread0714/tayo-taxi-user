@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:async' show Timer;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -11,8 +12,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:avatar_glow/avatar_glow.dart'; // 추가된 패키지
-
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:app_tayo_taxi/pickup_place_list_page.dart';
 import 'user_profile_page.dart';
@@ -37,18 +38,29 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
   latlng.LatLng? currentLatLng;
   latlng.LatLng? destinationLatLng;
   final TextEditingController destinationController = TextEditingController();
-  List<String> suggestions = [];
+  List<Map<String, dynamic>> suggestions = <Map<String, dynamic>>[];
   late stt.SpeechToText _speech;
   late FlutterTts _flutterTts;
+  late TutorialCoachMark tutorialCoachMark;
+  List<TargetFocus> targets = [];
 
-  @override
+  // GlobalKey들을 클래스 내부로 이동
+  final GlobalKey destinationFieldKey = GlobalKey();
+  final GlobalKey micButtonKey = GlobalKey();
+  final GlobalKey nextButtonKey = GlobalKey();
+
+    @override
   void initState() {
     super.initState();
     _getCurrentLocation();
     _speech = stt.SpeechToText();
     _flutterTts = FlutterTts();
     _flutterTts.setLanguage("ko-KR");
-    _flutterTts.speak("어디로 가고 싶으신가요?"); // 자동 안내
+    
+    // 위젯이 완전히 빌드된 후 첫 번째 튜토리얼 시작 (로그인 후 1회만)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowFirstTutorial(context);
+    });
   }
 
   Future<void> _processVoiceWithAI() async {
@@ -60,6 +72,7 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
       await _handleDestinationInput();
     }
   }
+
   Future<void> _handleDestinationInput() async {
     final available = await _speech.initialize();
     if (!available) {
@@ -72,7 +85,10 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     final result = await _listenOnce();
     setState(() => isListening = false);
 
-    if (result.length < 2) {
+    print("인식된 음성: '$result' (길이: ${result.length})");
+    
+    if (result.isEmpty || result.length < 2) {
+      _showBottomPopup("말씀을 인식하지 못했어요. 다시 눌러주세요.");
       await _speakAndWait("말씀을 인식하지 못했어요. 다시 눌러주세요.");
       return;
     }
@@ -84,8 +100,10 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
       if (home != null) {
         destinationController.text = home['placeName'];
         destinationLatLng = latlng.LatLng(home['lat'], home['lng']);
+        _showBottomPopup("집으로 설정했어요. 다음 버튼을 눌러주세요.");
         await _speakAndWait("집으로 설정했어요. 다음 버튼을 눌러주세요.");
       } else {
+        _showBottomPopup("집 주소가 설정되어 있지 않아요.");
         await _speakAndWait("집 주소가 설정되어 있지 않아요.");
       }
       return;
@@ -93,6 +111,7 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
 
     final extracted = await extractPlaceName(result);
     if (extracted == null || extracted.length < 2) {
+      _showBottomPopup("죄송합니다. 장소를 이해하지 못했어요.");
       await _speakAndWait("죄송합니다. 장소를 이해하지 못했어요.");
       return;
     }
@@ -100,7 +119,15 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     // 👉 다음 클릭 시 네/아니요로 넘어가게 준비
     extractedPlaceForConfirmation = extracted;
     waitingForConfirmation = true;
-    await _speakAndWait("$extracted 로 가고 싶으신가요? 네 또는 아니요로 대답해주세요.");
+    _showBottomPopup("$extracted 이(가) 맞으신가요?"); 
+    await _speakAndWait("$extracted 이(가) 맞으신가요?");
+    
+    // 팝업이 닫힌 후 자동으로 음성인식 시작 (초 후)
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted && waitingForConfirmation) {
+        _handleConfirmationInput();
+      }
+    });
   }
 
   Future<void> _handleConfirmationInput() async {
@@ -112,22 +139,43 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
 
     await Future.delayed(Duration(milliseconds: 300));
 
+    // 바로 음성인식 시작 (추가 안내 없이)
     setState(() => isListening = true);
     final result = await _listenOnce();
     setState(() => isListening = false);
 
     final answer = result.toLowerCase().replaceAll(RegExp(r'[^\uAC00-\uD7A3a-z0-9]'), '');
-    final yes = ["네", "예", "응", "그래", "좋아"].any((e) => answer.contains(e));
+    final yes = ["네", "예", "응", "그래", "좋아", "맞아", "맞습니다"].any((e) => answer.contains(e));
     final no = ["아니", "노", "싫"].any((e) => answer.contains(e));
+    
+    print("확인 응답: $result");
 
     if (yes) {
       destinationController.text = extractedPlaceForConfirmation!;
-      await _fetchPlaceSuggestions(extractedPlaceForConfirmation!);
+      // 자동완성 리스트는 표시하지 않고 바로 첫 번째 항목 선택
+      await _convertAddressToLatLng(extractedPlaceForConfirmation!);
+      _showBottomPopup("${extractedPlaceForConfirmation!}로 설정했어요.");
       await _speakAndWait("${extractedPlaceForConfirmation!}로 설정했어요.");
     } else if (no) {
+      _showBottomPopup("알겠습니다. 다시 말씀해주세요.");
       await _speakAndWait("알겠습니다. 다시 말씀해주세요.");
+      
+      // 다시 음성인식 시작 (3초 후)
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted && waitingForConfirmation) {
+          _handleDestinationInput();
+        }
+      });
     } else {
-      await _speakAndWait("죄송해요. 네 또는 아니요로 말씀해주세요.");
+      _showBottomPopup("죄송해요. 다시 말씀해주세요.");
+      await _speakAndWait("죄송해요. 다시 말씀해주세요.");
+      
+      // 다시 음성인식 시작 (3초 후)
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted && waitingForConfirmation) {
+          _handleConfirmationInput();
+        }
+      });
       return;
     }
 
@@ -179,29 +227,51 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
   }
 
   Future<void> _fetchPlaceSuggestions(String input) async {
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&key=$kGoogleApiKey&language=ko&components=country:kr';
+    if (input.isEmpty) {
+      setState(() => suggestions = <Map<String, dynamic>>[]);
+      return;
+    }
+
+    final url = Uri.https(
+      'maps.googleapis.com',
+      '/maps/api/place/autocomplete/json',
+      {
+        'input': input,
+        'key': kGoogleApiKey,
+        'language': 'ko',
+        'components': 'country:kr',
+      },
+    );
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final predictions = data['predictions'] as List;
+        final preds = data['predictions'] as List;
+
         setState(() {
-          suggestions =
-              predictions.map((p) => p['description'] as String).toList();
+          suggestions = preds.map((p) {
+            final fmt = p['structured_formatting'];
+            return {
+              'placeId': p['place_id'],
+              'placeName': fmt['main_text'],
+              'address': fmt['secondary_text'],
+            };
+          }).toList();
         });
       } else {
-        setState(() => suggestions = []);
+        setState(() => suggestions = <Map<String, dynamic>>[]);
       }
     } catch (e) {
-      setState(() => suggestions = []);
+      setState(() => suggestions = <Map<String, dynamic>>[]);
     }
   }
 
-  Future<void> _selectSuggestion(String suggestion) async {
-    destinationController.text = suggestion;
-    await _convertAddressToLatLng(suggestion);
+  Future<void> _selectSuggestion(Map<String, dynamic> suggestion) async {
+    destinationController.text = suggestion['placeName'];
+    await _convertAddressToLatLng(
+      "${suggestion['address']} ${suggestion['placeName']}",
+    );
     setState(() => suggestions.clear());
   }
 
@@ -238,24 +308,79 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
     }
   }
 
+  void _showBottomPopup(String message) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      builder: (BuildContext context) {
+        return Container(
+          margin: EdgeInsets.only(
+            left: screenWidth * 0.05,
+            right: screenWidth * 0.05,
+            bottom: screenHeight * 0.15, // 하단 여백을 늘려서 더 위로 올림
+          ),
+          padding: EdgeInsets.all(screenWidth * 0.05),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: screenWidth * 0.045,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        );
+      },
+    );
+    
+    // 3초 후 자동으로 닫기
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   Future<String> _listenOnce() async {
     final completer = Completer<String>();
     bool gotResult = false;
 
+    print("음성인식 시작...");
+    
     await _speech.listen(
       localeId: "ko_KR",
-      listenMode: stt.ListenMode.dictation,
+      listenMode: stt.ListenMode.confirmation,
       onResult: (result) {
+        print("음성인식 결과: '${result.recognizedWords}' (최종: ${result.finalResult})");
         if (!gotResult && result.finalResult && result.recognizedWords.isNotEmpty) {
           gotResult = true;
+          print("음성인식 완료: '${result.recognizedWords.trim()}'");
           completer.complete(result.recognizedWords.trim());
         }
       },
     );
 
     return completer.future.timeout(
-      const Duration(seconds: 6),
-      onTimeout: () => '',
+      const Duration(seconds: 10), // 타임아웃 시간 증가
+      onTimeout: () {
+        print("음성인식 타임아웃");
+        return '';
+      },
     );
   }
 
@@ -369,27 +494,93 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
                         ),
                       ),
                       SizedBox(height: screenHeight * 0.025),
-                      TextField(
-                        controller: destinationController,
-                        onChanged: _fetchPlaceSuggestions,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.place),
-                          labelText: '목적지 입력',
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 22.0, horizontal: 16.0),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      Row(
+                        key: destinationFieldKey, // Row에 GlobalKey 추가
+                        children: [
+                                                      Expanded(
+                              child: TextField(
+                                controller: destinationController,
+                              onChanged: _fetchPlaceSuggestions,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.place),
+                                labelText: '목적지 입력',
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.027,
+                                  horizontal: screenWidth * 0.04,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          SizedBox(width: screenWidth * 0.02),
+                          GestureDetector(
+                            onTap: _processVoiceWithAI,
+                            child: Container(
+                              key: micButtonKey, // GlobalKey를 Container에 직접 부여
+                              width: 50,
+                              height: 20 + (screenHeight * 0.027 * 2), // TextField 높이와 맞춤
+                              decoration: BoxDecoration(
+                                color: isListening ? Colors.red.shade100 : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isListening ? Colors.red : Colors.grey,
+                                  width: isListening ? 2 : 1,
+                                ),
+                                boxShadow: isListening ? [
+                                  BoxShadow(
+                                    color: Colors.red.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  )
+                                ] : null,
+                              ),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Icon(
+                                      Icons.mic,
+                                      size: screenWidth * 0.07,
+                                      color: isListening
+                                          ? Colors.red.shade700
+                                          : Colors.green.shade900,
+                                    ),
+                                  ),
+                                  if (isListening)
+                                    Positioned(
+                                      top: 2,
+                                      right: 2,
+                                      child: Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+
                       SizedBox(height: screenHeight * 0.013),
                       ...suggestions.map((s) =>
                           ListTile(
-                            title: Text(s),
+                            title: Text(
+                              s['placeName'],
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(s['address'] ?? ''),
                             onTap: () => _selectSuggestion(s),
-                          )),
+                          ),
+                      ),
                       SizedBox(height: screenHeight * 0.025),
                       ElevatedButton(
+                        key: nextButtonKey,
                         onPressed: () async {
                           if (currentLatLng == null) return;
                           if (destinationLatLng == null &&
@@ -488,43 +679,194 @@ class _DestinationInputPageState extends State<DestinationInputPage> {
                 },
               ),
             ),
-
-            // 🔵 AvatarGlow 음성 인식 시각화 추가
-            Positioned(
-              bottom: 20,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: AvatarGlow(
-    glowColor: Colors.green,
-    endRadius: 50.0,
-    animate: isListening,
-    duration: const Duration(milliseconds: 2000),
-    repeatPauseDuration: const Duration(milliseconds: 100),
-    repeat: true,
-    child: Material(
-    elevation: 4.0,
-    shape: const CircleBorder(),
-    child: InkWell(
-    onTap: _processVoiceWithAI, // 버튼 클릭 시 음성 인식 시작
-    customBorder: const CircleBorder(),
-    child: CircleAvatar(
-    backgroundColor: Colors.green.shade100,
-    radius: 28.0,
-    child: Icon(
-    Icons.mic,
-    size: 28.0,
-    color: isListening ? Colors.green.shade900 : Colors.grey,
-    ),
-    ),
-    ),
-    ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  void _showFirstTutorial(BuildContext context) {
+    final double screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final double screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+
+    targets.clear();
+    targets.addAll([
+      TargetFocus(
+        identify: "input_area",
+        keyTarget: destinationFieldKey, // 목적지 입력 칸을 기준으로 큰 영역 설정
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "이 곳에 가고 싶은 장소를 입력하세요",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.05,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  "칸을 터치하세요",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.035,
+                  ),
+                )
+              ],
+            ),
+          ),
+          TargetContent(
+            align: ContentAlign.top, // 또는 topCenter
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end, // 오른쪽 정렬
+              children: [
+                Text(
+                  "마이크 버튼을 눌러서\n직접 말할 수도 있어요",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.05,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    ]);
+
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        // 첫 번째 튜토리얼 완료 후 두 번째 튜토리얼 시작
+        _showSecondTutorial(context);
+      },
+      onClickTarget: (target) {
+        print("첫 번째 튜토리얼 타겟 클릭: ${target.identify}");
+        tutorialCoachMark.next();
+        return true;
+      },
+      onClickOverlay: (target) {
+        print("첫 번째 튜토리얼 오버레이 클릭: ${target.identify}");
+        tutorialCoachMark.next();
+        return true;
+      },
+      onSkip: () {
+        _showSecondTutorial(context);
+        return true;
+      },
+      hideSkip: true,
+    );
+
+    tutorialCoachMark.show(context: context);
+  }
+
+  void _showSecondTutorial(BuildContext context) {
+    final double screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final double screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+
+    targets.clear();
+    targets.addAll([
+      TargetFocus(
+        identify: "next",
+        keyTarget: nextButtonKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "목적지를 입력했다면 이 버튼을 눌러주세요",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.05,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  "버튼을 터치하세요",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.035,
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    ]);
+
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        _flutterTts.speak("어디로 가고 싶으신가요?"); // 튜토리얼 완료 후 안내
+      },
+      onClickTarget: (target) {
+        print("두 번째 튜토리얼 타겟 클릭: ${target.identify}");
+        tutorialCoachMark.next();
+        return true;
+      },
+      onClickOverlay: (target) {
+        print("두 번째 튜토리얼 오버레이 클릭: ${target.identify}");
+        tutorialCoachMark.next();
+        return true;
+      },
+
+      hideSkip: true,
+    );
+
+    tutorialCoachMark.show(context: context);
+  }
+
+  @override
+  void dispose() {
+    destinationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndShowFirstTutorial(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'unknown';
+    final key = 'has_shown_destination_tutorial_$userId';
+    final hasShownTutorial = prefs.getBool(key) ?? false;
+    
+    if (!hasShownTutorial) {
+      await prefs.setBool(key, true);
+      _showFirstTutorial(context);
+    } else {
+      // ride_arrival_page에서 넘어온 경우에도 TTS 재생 (메인화면 진입 후)
+      // _flutterTts.speak("어디로 가고 싶으신가요?");
+    }
   }
 }

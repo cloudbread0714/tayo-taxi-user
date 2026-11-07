@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'select_pickup_location_page.dart';
 
@@ -28,6 +31,11 @@ class _PickupListPageState extends State<PickupListPage> {
   bool isLoading = true;
   final keywords = ['약국', '편의점', '주민센터', '학교 정문'];
   final Distance distanceCalculator = Distance();
+  
+  // 튜토리얼 관련 변수들
+  final GlobalKey firstSelectButtonKey = GlobalKey();
+  late TutorialCoachMark tutorialCoachMark;
+  List<TargetFocus> targets = [];
 
   @override
   void initState() {
@@ -115,11 +123,96 @@ class _PickupListPageState extends State<PickupListPage> {
       nearbyPlaces = results.take(5).toList();
       isLoading = false;
     });
+    
+    // 데이터 로드 완료 후 튜토리얼 시작 (로그인 후 1회만)
+    if (nearbyPlaces.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkAndShowPickupPlaceTutorial(context);
+      });
+    }
   }
 
   void _showSnackbar(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _showPickupPlaceTutorial(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    targets.clear();
+    targets.addAll([
+      TargetFocus(
+        identify: "select_button",
+        keyTarget: firstSelectButtonKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 8,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top, // 또는 topCenter
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end, // 오른쪽 정렬
+              children: [
+                Text(
+                  "이 버튼을 눌러 택시를 탑승할 장소를\n선택할 수 있어요",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.05,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  "버튼을 터치하세요",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.035,
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    ]);
+
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black.withOpacity(0.8),
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {},
+      onClickTarget: (target) {
+        tutorialCoachMark.next();
+        return true;
+      },
+      onClickOverlay: (target) {
+        tutorialCoachMark.next();
+        return true;
+      },
+      onSkip: () {
+        return true;
+      },
+      hideSkip: true,
+    );
+
+    tutorialCoachMark.show(context: context);
+  }
+
+  Future<void> _checkAndShowPickupPlaceTutorial(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'unknown';
+    final key = 'has_shown_pickup_place_tutorial_$userId';
+    final hasShownTutorial = prefs.getBool(key) ?? false;
+    
+    if (!hasShownTutorial) {
+      await prefs.setBool(key, true);
+      _showPickupPlaceTutorial(context);
+    }
   }
 
   @override
@@ -203,6 +296,7 @@ class _PickupListPageState extends State<PickupListPage> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
+                          key: index == 0 ? firstSelectButtonKey : null, // 첫 번째 아이템에만 GlobalKey 추가
                           onPressed: () {
                             Navigator.push(
                               context,
