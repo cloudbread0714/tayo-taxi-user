@@ -47,6 +47,10 @@
 
 ## 기술 스택
 
+<p align="center">
+  <img src="images/tech_stack.png" alt="기술 스택" width="420"/>
+</p>
+
 | 구분 | 기술 / API | 설명 |
 |------|------------|------|
 | **프레임워크** | Flutter (Dart) | UI 구현 및 크로스 플랫폼 앱 개발 |
