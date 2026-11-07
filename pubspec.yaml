@@ -1,5 +1,5 @@
 name: app_tayo_taxi
-description: "A new Flutter project."
+description: "타요택시 사용자 앱 - 시니어 맞춤형 택시 호출 앱"
 publish_to: 'none'
 
 version: 1.0.0+1
