@@ -45,19 +45,18 @@
 
 ## 기술 스택
 
-<p align="center">
-  <img src="images/tech_stack.png" alt="기술 스택" width="420"/>
-</p>
+**프레임워크**
+- Flutter (Dart)
 
-| 구분 | 기술 / API | 설명 |
-|------|------------|------|
-| **프레임워크** | Flutter (Dart) | UI 구현 및 크로스 플랫폼 앱 개발 |
-| **백엔드 / DB** | Firebase Authentication | 사용자 인증 처리 |
-| | Cloud Firestore | 실시간 데이터베이스 연동 |
-| **위치 / 지도 API** | Google Maps API | 목적지 자동완성, 위도·경도 변환 |
-| | Tmap API | 500m 이내 약국, 편의점, 주민센터, 학교 정문 등 픽업 위치 리스트 |
-| | Naver Map SDK | 픽업 위치 지도 시각화 |
-| | Geolocator | 현재 위치 조회 |
+**백엔드**
+- Firebase Authentication — 로그인 / 회원가입
+- Cloud Firestore — 호출·운행 실시간 데이터
+
+**지도 / 위치**
+- Google Places API — 목적지 자동완성, 음성 장소 추출
+- Tmap API — 500m 이내 랜드마크 픽업 추천
+- Naver Map SDK — 픽업 위치 지도
+- Geolocator — 현재 위치 조회
 
 ## 플로우 차트
 
