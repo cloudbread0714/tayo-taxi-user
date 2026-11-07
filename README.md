@@ -2,8 +2,23 @@
 
 **타요택시**는 사용자의 현재 위치를 기준으로 목적지를 설정하고, 근처 택시를 호출할 수 있는 Flutter 기반 모바일 애플리케이션입니다. 사용자 친화적인 UI와 실시간 위치 연동 기능을 통해 누구나 쉽게 사용할 수 있도록 설계되었습니다.
 
-기사앱 
-https://github.com/cloudbread0714/tayo-taxi-driver
+기사앱: https://github.com/cloudbread0714/tayo-taxi-driver
+
+---
+
+## 제출 자료
+
+| 구분 | 자료 |
+|------|------|
+| 프로젝트 결과물 (소스 코드) | 이 저장소 (`lib/`, `android/`, `ios/`) |
+| 기사 앱 소스 코드 | [tayo-taxi-driver](https://github.com/cloudbread0714/tayo-taxi-driver) |
+| 개발 문서 | 이 README, [기능 흐름도](images/기능_흐름도.png) |
+| 발표자료 PDF | [docs/타요택시_발표자료.pdf](docs/타요택시_발표자료.pdf) |
+| 포스터 PDF | [docs/타요택시_포스터.pdf](docs/타요택시_포스터.pdf) |
+| 프로젝트 결과보고서 PDF | [docs/타요택시_결과보고서.pdf](docs/타요택시_결과보고서.pdf) |
+| 시연 영상 | [YouTube Shorts](https://www.youtube.com/shorts/5BCnoYH2l_A) |
+
+시연 영상 직접 링크: https://www.youtube.com/shorts/5BCnoYH2l_A
 
 ---
 
