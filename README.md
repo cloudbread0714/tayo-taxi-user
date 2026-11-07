@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚕 타요택시 (Tayo Taxi)
+# 타요택시 (Tayo Taxi)
 
 **시니어 맞춤형 택시 호출 앱 — 사용자(승객) 앱**
 
@@ -19,19 +19,19 @@
 
 ---
 
-## 📦 제출 자료
+## 제출 자료
 
 | 항목 | 링크 |
 |------|------|
-| 🎬 시연 영상 | [YouTube에서 보기](https://www.youtube.com/shorts/5BCnoYH2l_A) |
-| 🖼️ 포스터 | [docs/poster.pdf](docs/poster.pdf) |
-| 📄 결과보고서 | [docs/final-report.pdf](docs/final-report.pdf) |
-| 💻 소스 코드 | [`lib/`](lib) (사용자 앱) · [기사 앱 저장소](https://github.com/cloudbread0714/tayo-taxi-driver) |
-| 🛠️ 개발 문서 | [실행 방법](#-실행-방법) · [프로젝트 구조](#-프로젝트-구조) · [플로우 차트](#-플로우-차트) |
+| 시연 영상 | [YouTube에서 보기](https://www.youtube.com/shorts/5BCnoYH2l_A) |
+| 포스터 | [docs/poster.pdf](docs/poster.pdf) |
+| 결과보고서 | [docs/final-report.pdf](docs/final-report.pdf) |
+| 소스 코드 | [`lib/`](lib) (사용자 앱) · [기사 앱 저장소](https://github.com/cloudbread0714/tayo-taxi-driver) |
+| 개발 문서 | [실행 방법](#실행-방법) · [프로젝트 구조](#프로젝트-구조) · [플로우 차트](#플로우-차트) |
 
 ---
 
-## 🎬 시연 영상
+## 시연 영상
 
 <p align="center">
   <a href="https://www.youtube.com/shorts/5BCnoYH2l_A">
@@ -41,7 +41,7 @@
   <sub>이미지를 누르면 YouTube에서 재생됩니다.</sub>
 </p>
 
-## 🖼️ 포스터
+## 포스터
 
 <p align="center">
   <a href="docs/poster.pdf">
@@ -51,17 +51,17 @@
 
 ---
 
-## ✨ 주요 기능
+## 주요 기능
 
 | 기능 | 설명 |
 |------|------|
-| 📍 현재 위치 추적 | Geolocator로 현재 위치를 자동으로 가져옵니다. |
-| 🏪 랜드마크 픽업 추천 | 500m 이내 약국·편의점·주민센터·학교 정문 등을 리스트로 보여주고 픽업 위치로 선택합니다. |
-| 🎙️ 음성 목적지 입력 | 말로 목적지를 입력하면 Google Places로 장소를 찾아줍니다. |
-| ⭐ 즐겨찾기 · 이용 내역 | 자주 가는 장소를 저장하고 지난 호출 기록을 확인합니다. |
-| 🔐 인증 · 실시간 연동 | Firebase Authentication으로 로그인하고, Firestore로 기사 앱과 호출·운행 상태를 실시간 공유합니다. |
+| 현재 위치 추적 | Geolocator로 현재 위치를 자동으로 가져옵니다. |
+| 랜드마크 픽업 추천 | 500m 이내 약국·편의점·주민센터·학교 정문 등을 리스트로 보여주고 픽업 위치로 선택합니다. |
+| 음성 목적지 입력 | 말로 목적지를 입력하면 Google Places로 장소를 찾아줍니다. |
+| 즐겨찾기 · 이용 내역 | 자주 가는 장소를 저장하고 지난 호출 기록을 확인합니다. |
+| 인증 · 실시간 연동 | Firebase Authentication으로 로그인하고, Firestore로 기사 앱과 호출·운행 상태를 실시간 공유합니다. |
 
-## 🧰 기술 스택
+## 기술 스택
 
 | 구분 | 기술 | 용도 |
 |------|------|------|
@@ -73,7 +73,7 @@
 | | Naver Map SDK | 픽업 위치 지도 표시 |
 | | Geolocator | 현재 위치 조회 |
 
-## 🔀 플로우 차트
+## 플로우 차트
 
 <p align="center">
   <img src="images/기능_흐름도.png" alt="기능 흐름도" width="720"/>
@@ -81,7 +81,7 @@
 
 ---
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 tayo-taxi-user/
@@ -107,7 +107,7 @@ tayo-taxi-user/
 └── .env.example                         # 환경 변수 템플릿
 ```
 
-## 🚀 실행 방법
+## 실행 방법
 
 **요구 사항**: Flutter SDK 3.7 이상, Android Studio 또는 Xcode
 
@@ -135,7 +135,7 @@ flutter run
 
 ---
 
-## 👥 개발 팀원
+## 개발 팀원
 
 | 이름 | 역할 | 주요 담당 업무 |
 |------|------|----------------|
